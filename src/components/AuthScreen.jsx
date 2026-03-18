@@ -13,17 +13,17 @@ function Feature({ icon: Icon, label }) {
   )
 }
 
-export function AuthScreen({ onSignIn, onDemoMode, loading }) {
+export function AuthScreen({ onSignIn, loading }) {
   return (
     <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex items-center justify-center p-4">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl">
 
         {/* Left panel — branding */}
-        <div className="bg-primary p-10 flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-[#0D0D0D] via-[#111111] to-[#1a0000] p-10 flex flex-col justify-between">
           <div>
             {/* Logo */}
             <div className="flex items-center gap-3 mb-10">
-              <div className="w-10 h-10 rounded-2xl bg-accent flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center">
                 <Zap size={22} className="text-white" />
               </div>
               <span className="text-2xl font-bold text-white font-serif tracking-tight">Loco</span>
@@ -78,17 +78,15 @@ export function AuthScreen({ onSignIn, onDemoMode, loading }) {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border-light dark:border-border-dark" />
             </div>
-            <div className="relative flex justify-center text-xs text-muted-light dark:text-muted-dark bg-surface-light dark:bg-surface-dark px-3">
-              or
-            </div>
+           
           </div>
 
-          <button
+          {/* <button
             onClick={onDemoMode}
             className="btn-ghost w-full justify-center"
           >
             Try with demo data
-          </button>
+          </button> */}
 
           <p className="text-xs text-muted-light dark:text-muted-dark mt-6 text-center leading-relaxed">
             By signing in you agree to our terms.

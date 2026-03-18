@@ -28,9 +28,14 @@ export function useAuth() {
     }
 
     // Real Supabase auth
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('[Auth] getSession error:', error.message)
+        setLoading(false)
+        return
+      }
+      setSession(data.session)
+      setUser(data.session?.user ?? null)
       setLoading(false)
     })
 
