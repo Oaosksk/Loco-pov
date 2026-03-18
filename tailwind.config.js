@@ -6,34 +6,34 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#111111',   /* near-black — replaces all green */
-          light:   '#2A2A2A',
-          dark:    '#000000',
+          DEFAULT: '#FF3B3B',   /* grok red */
+          light:   '#FF6B6B',
+          dark:    '#CC2222',
         },
         accent: {
-          DEFAULT: '#E07B2A',   /* warm orange — kept */
-          light:   '#f0913e',
-          dark:    '#c96a1e',
+          DEFAULT: '#FF3B3B',
+          light:   '#FF6B6B',
+          dark:    '#CC2222',
         },
         bg: {
-          light: '#EDEBE5',     /* warm paper white — from reference */
-          dark:  '#000000',     /* pitch black */
+          light: '#F5F5F5',
+          dark:  '#000000',     /* pure black */
         },
         surface: {
           light: '#FFFFFF',
-          dark:  '#0A0A0A',     /* near-black cards */
+          dark:  '#0D0D0D',     /* near-black card */
         },
         border: {
-          light: '#DDD9D2',     /* soft warm gray */
-          dark:  '#1C1C1C',     /* barely-visible dark border */
+          light: '#E5E5E5',
+          dark:  '#1A1A1A',     /* barely visible border */
         },
         text: {
-          light: '#111111',     /* near-black — maximum contrast */
+          light: '#0A0A0A',
           dark:  '#FFFFFF',     /* pure white */
         },
         muted: {
-          light: '#888580',     /* warm mid-gray */
-          dark:  '#9A9A9A',     /* readable in pitch black */
+          light: '#737373',
+          dark:  '#666666',     /* mid gray */
         },
       },
       fontFamily: {
@@ -61,9 +61,9 @@ export default {
       },
       boxShadow: {
         card:       '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
-        'card-hover': '0 4px 24px rgba(0,0,0,0.10)',
-        'card-dark':  '0 1px 0 rgba(255,255,255,0.05), 0 8px 40px rgba(0,0,0,0.8)',
-        sidebar:    '2px 0 12px rgba(0,0,0,0.15)',
+        'card-hover': '0 4px 24px rgba(255,59,59,0.12)',
+        'card-dark':  '0 1px 0 rgba(255,255,255,0.04), 0 8px 40px rgba(0,0,0,0.9)',
+        sidebar:    '2px 0 12px rgba(0,0,0,0.6)',
       },
       animation: {
         'bounce-dot': 'bounce 0.6s infinite alternate',
