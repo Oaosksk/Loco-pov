@@ -252,9 +252,9 @@ export function Notes({ userId, isDemoMode }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold font-serif text-text-light dark:text-text-dark">Notes</h1>
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">Notes</h1>
           <p className="text-sm text-muted-light dark:text-muted-dark mt-0.5">
             {notes.length} note{notes.length !== 1 ? 's' : ''}
           </p>

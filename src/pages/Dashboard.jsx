@@ -330,7 +330,7 @@ export function Dashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold font-serif text-text-light dark:text-text-dark">Dashboard</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <ExpenseCard total={monthTotal} />
         <ReminderCard 
           reminders={reminders} 

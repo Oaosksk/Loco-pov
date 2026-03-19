@@ -276,9 +276,9 @@ export function Goals({ userId, isDemoMode }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold font-serif text-text-light dark:text-text-dark">Goals</h1>
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">Goals</h1>
           <p className="text-sm text-muted-light dark:text-muted-dark mt-0.5">
             {total} goal{total !== 1 ? 's' : ''} tracked
           </p>
@@ -339,7 +339,7 @@ export function Goals({ userId, isDemoMode }) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filtered.map((goal) => (
             <GoalCard
               key={goal.id}
