@@ -1,15 +1,22 @@
-import React, { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import React, { useState, useRef, useEffect } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  BookOpen, Target, HardDrive, Brain, Zap,
-  Sun, Moon, LogOut, PanelLeft, X
+  LayoutDashboard, BookOpen, Wallet, Target, Heart,
+  Zap, Sun, Moon, LogOut, MoreVertical,
+  /* PanelLeft, X */
 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { to: '/notes',  label: 'Notes',  icon: BookOpen },
-  { to: '/goals',  label: 'Goals',  icon: Target   },
-  { to: '/drive',  label: 'Drive',  icon: HardDrive },
-  { to: '/ai',     label: 'AI',     icon: Brain    },
+// Main bottom nav items
+const MAIN_NAV = [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/notes',     label: 'Notes',     icon: BookOpen         },
+  { to: '/expenses',  label: 'Expenses',  icon: Wallet           },
+]
+
+// Items hidden inside the ⋮ more menu
+const MORE_NAV = [
+  { to: '/goals',  label: 'Goals',  icon: Target },
+  { to: '/health', label: 'Health', icon: Heart  },
 ]
 
 function Avatar({ user }) {
@@ -94,47 +101,60 @@ function Sidebar({ user, isDark, onToggleDark, onSignOut, isDemoMode }) {
   )
 }
 
-// Floating sidebar
-function FloatingSidebar({ onClose, open }) {
-  return (
-    <aside className={`fixed top-1/2 left-4 -translate-y-1/2 z-50 w-56 flex flex-col
-                      bg-surface-dark rounded-xl shadow-card-dark border border-border-dark
-                      overflow-hidden transition-all duration-300
-                      ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-
-      {/* Nav only */}
-      <nav className="px-2 py-3 space-y-1">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors
-               ${isActive ? 'bg-white/15 text-white' : 'text-white/50 hover:text-white hover:bg-white/10'}`
-            }
-          >
-            <Icon size={15} />
-            {label}
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* Cancel button */}
-      <div className="px-2 pb-3 pt-1 border-t border-border-dark">
-        <button
-          onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
-                     text-sm font-semibold text-white/50 hover:text-white hover:bg-white/10 transition-colors">
-          <X size={15} />
-          Cancel
-        </button>
-      </div>
-    </aside>
-  )
-}
+// Floating sidebar — hidden until needed
+// function FloatingSidebar({ onClose, open }) {
+//   return (
+//     <aside className={`fixed top-1/2 left-4 -translate-y-1/2 z-50 w-56 flex flex-col
+//                       bg-surface-dark rounded-xl shadow-card-dark border border-border-dark
+//                       overflow-hidden transition-all duration-300
+//                       ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+//
+//       {/* Nav only */}
+//       <nav className="px-2 py-3 space-y-1">
+//         {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+//           <NavLink
+//             key={to}
+//             to={to}
+//             className={({ isActive }) =>
+//               `flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors
+//                ${isActive ? 'bg-white/15 text-white' : 'text-white/50 hover:text-white hover:bg-white/10'}`
+//             }
+//           >
+//             <Icon size={15} />
+//             {label}
+//           </NavLink>
+//         ))}
+//       </nav>
+//
+//       {/* Cancel button */}
+//       <div className="px-2 pb-3 pt-1 border-t border-border-dark">
+//         <button
+//           onClick={onClose}
+//           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+//                      text-sm font-semibold text-white/50 hover:text-white hover:bg-white/10 transition-colors">
+//           <X size={15} />
+//           Cancel
+//         </button>
+//       </div>
+//     </aside>
+//   )
+// }
 
 // Top bar + bottom nav
-function BottomNav({ user, isDark, onToggleDark, onSignOut, onToggleSidebar, sidebarOpen }) {
+function BottomNav({ user, isDark, onToggleDark, onSignOut /*, onToggleSidebar, sidebarOpen */ }) {
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreRef = useRef(null)
+  const navigate = useNavigate()
+
+  // Close popup when clicking outside
+  useEffect(() => {
+    function handleClick(e) {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
   return (
     <>
       {/* Top bar */}
@@ -156,27 +176,15 @@ function BottomNav({ user, isDark, onToggleDark, onSignOut, onToggleSidebar, sid
         <Avatar user={user} />
       </header>
 
-      {/* Bottom navigation — hidden when sidebar open */}
-      <nav className={`fixed bottom-0 left-0 right-0 z-30 px-3 pb-3 pt-2
+      {/* Bottom navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 px-3 pb-3 pt-2
                       bg-surface-light dark:bg-surface-dark
-                      border-t border-border-light dark:border-border-dark
-                      transition-all duration-300
-                      ${sidebarOpen ? 'opacity-0 translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}>
+                      border-t border-border-light dark:border-border-dark">
         <div className="flex items-center justify-between gap-1 max-w-lg mx-auto
                         bg-bg-light dark:bg-bg-dark rounded-2xl px-2 py-1.5">
 
-          {/* Toggle sidebar icon */}
-          <button
-            onClick={onToggleSidebar}
-            className="flex items-center justify-center w-10 h-10 rounded-xl transition-colors
-                       text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark">
-            <PanelLeft size={20} />
-          </button>
-
-          <div className="w-px h-6 bg-border-light dark:bg-border-dark" />
-
-          {/* Nav items */}
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {/* Main nav items */}
+          {MAIN_NAV.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -192,10 +200,43 @@ function BottomNav({ user, isDark, onToggleDark, onSignOut, onToggleSidebar, sid
             </NavLink>
           ))}
 
+          {/* ⋮ More button with popup */}
+          <div className="relative" ref={moreRef}>
+            {/* More popup — Goals & Health */}
+            {moreOpen && (
+              <div className="absolute bottom-12 right-0 w-40
+                              bg-surface-light dark:bg-surface-dark
+                              border border-border-light dark:border-border-dark
+                              rounded-xl shadow-lg overflow-hidden z-50">
+                {MORE_NAV.map(({ to, label, icon: Icon }) => (
+                  <button
+                    key={to}
+                    onClick={() => { navigate(to); setMoreOpen(false) }}
+                    className="w-full flex items-center gap-2.5 px-4 py-3
+                               text-sm font-semibold
+                               text-text-light dark:text-text-dark
+                               hover:bg-bg-light dark:hover:bg-bg-dark transition-colors">
+                    <Icon size={16} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setMoreOpen(v => !v)}
+              className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all
+                         ${moreOpen
+                           ? 'bg-text-light dark:bg-text-dark text-surface-light dark:text-surface-dark'
+                           : 'text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark'}`}>
+              <MoreVertical size={20} />
+            </button>
+          </div>
+
           <div className="w-px h-6 bg-border-light dark:bg-border-dark" />
 
-          {/* Avatar */}
-          <button onClick={onSignOut}
+          {/* Avatar / sign out */}
+          <button
+            onClick={onSignOut}
             className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border-light dark:ring-border-dark">
             <Avatar user={user} />
           </button>
@@ -207,21 +248,18 @@ function BottomNav({ user, isDark, onToggleDark, onSignOut, onToggleSidebar, sid
 }
 
 export function Layout({ user, isDark, onToggleDark, onSignOut, isDemoMode, children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  // const [sidebarOpen, setSidebarOpen] = useState(false) // sidebar hidden until needed
 
   return (
     <div className="flex flex-col min-h-screen bg-bg-light dark:bg-bg-dark">
-      <FloatingSidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      {/* <FloatingSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} /> */}
       <BottomNav
         user={user}
         isDark={isDark}
         onToggleDark={onToggleDark}
         onSignOut={onSignOut}
-        onToggleSidebar={() => setSidebarOpen(v => !v)}
-        sidebarOpen={sidebarOpen}
+        // onToggleSidebar={() => setSidebarOpen(v => !v)}
+        // sidebarOpen={sidebarOpen}
       />
       <main className="flex-1 p-4 md:p-8 pb-28 max-w-5xl w-full mx-auto animate-fade-in">
         {children}

@@ -6,10 +6,11 @@ import { useGoals } from './hooks/useGoals'
 import { useDarkMode } from './hooks/useDarkMode'
 import { AuthScreen } from './components/AuthScreen'
 import { Layout } from './components/Layout'
+import { Dashboard } from './pages/Dashboard'
 import { Notes } from './pages/Notes'
 import { Goals } from './pages/Goals'
-import { Drive } from './pages/Drive'
-import { AI } from './pages/AI'
+import { Expenses } from './pages/Expenses'
+import { Health } from './pages/Health'
 
 function LoadingScreen() {
   return (
@@ -39,12 +40,13 @@ function AppInner({ user, session, isDemoMode, onSignOut }) {
         isDemoMode={isDemoMode}
       >
         <Routes>
-          <Route path="/" element={<Navigate to="/notes" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/notes" element={<Notes userId={user?.id} isDemoMode={isDemoMode} />} />
+          <Route path="/expenses" element={<Expenses />} />
           <Route path="/goals" element={<Goals userId={user?.id} isDemoMode={isDemoMode} />} />
-          <Route path="/drive" element={<Drive session={session} />} />
-          <Route path="/ai" element={<AI user={user} notes={notes} goals={goals} />} />
-          <Route path="*" element={<Navigate to="/notes" replace />} />
+          <Route path="/health" element={<Health />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Layout>
     </BrowserRouter>
