@@ -31,8 +31,8 @@ export function Sheet({ open, onClose, title, children }) {
 
       {/* Panel */}
       <div className="relative z-10 w-full sm:max-w-lg bg-surface-light dark:bg-surface-dark
-                      rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 animate-slide-up
-                      max-h-[90vh] overflow-y-auto">
+                      rounded-t-3xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 animate-slide-up
+                      max-h-[92svh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-text-light dark:text-text-dark font-serif">
             {title}

@@ -175,7 +175,7 @@ export function AI({ user, notes, goals }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)]">
+    <div className="flex flex-col" style={{ height: 'calc(100svh - 7rem)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -248,7 +248,7 @@ export function AI({ user, notes, goals }) {
 
       {/* Quick actions */}
       {messages.length === 0 && (
-        <div className="flex flex-wrap gap-2 py-3">
+        <div className="flex flex-wrap gap-2 py-3 overflow-x-auto">
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action}

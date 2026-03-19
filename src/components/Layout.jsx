@@ -10,12 +10,12 @@ import {
 const MAIN_NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/notes',     label: 'Notes',     icon: BookOpen         },
+  { to: '/goals',     label: 'Goals',     icon: Target           },
   { to: '/expenses',  label: 'Expenses',  icon: Wallet           },
 ]
 
 // Items hidden inside the ⋮ more menu
 const MORE_NAV = [
-  { to: '/goals',  label: 'Goals',  icon: Target },
   { to: '/health', label: 'Health', icon: Heart  },
 ]
 
@@ -189,14 +189,14 @@ function BottomNav({ user, isDark, onToggleDark, onSignOut /*, onToggleSidebar, 
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex items-center gap-1.5 px-3 h-10 rounded-xl text-sm font-semibold transition-all
+                `flex items-center gap-1 px-2 sm:px-3 h-10 rounded-xl text-xs sm:text-sm font-semibold transition-all
                  ${isActive
                    ? 'bg-text-light dark:bg-text-dark text-surface-light dark:text-surface-dark'
                    : 'text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark'}`
               }
             >
-              <Icon size={18} />
-              <span>{label}</span>
+              <Icon size={16} />
+              <span className="hidden xs:inline sm:inline">{label}</span>
             </NavLink>
           ))}
 
@@ -261,7 +261,7 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, isDemoMode, chil
         // onToggleSidebar={() => setSidebarOpen(v => !v)}
         // sidebarOpen={sidebarOpen}
       />
-      <main className="flex-1 p-4 md:p-8 pb-28 max-w-5xl w-full mx-auto animate-fade-in">
+      <main className="flex-1 p-3 md:p-8 pb-28 max-w-5xl w-full mx-auto animate-fade-in overflow-x-hidden">
         {children}
       </main>
     </div>
