@@ -16,7 +16,7 @@ const MAIN_NAV = [
 const MORE_NAV = [
   { to: '/expenses',  label: 'Expenses', icon: Wallet       },
   { to: '/health',    label: 'Health',   icon: Heart        },
-  { to: '/ai',        label: 'AI',       icon: Brain        },
+  // { to: '/ai',        label: 'AI',       icon: Brain        },
   { to: '/settings',  label: 'Settings', icon: Settings     },
 ]
 
@@ -152,7 +152,7 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, isDemoMode, chil
         onToggleDark={onToggleDark}
         onSignOut={onSignOut}
       />
-      <main className="flex-1 p-3 md:p-8 pb-32 max-w-5xl w-full mx-auto animate-fade-in overflow-x-hidden">
+      <main className="flex-1 p-3 md:p-8 pb-45 max-w-5xl w-full mx-auto animate-fade-in overflow-x-hidden">
         {children}
       </main>
     </div>

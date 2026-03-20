@@ -232,7 +232,7 @@ export function Dashboard() {
   const name = user?.user_metadata?.full_name?.split(' ')[0] || 'there'
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-8">
       {/* Greeting */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">
