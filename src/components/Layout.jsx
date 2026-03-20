@@ -152,7 +152,7 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, isDemoMode, chil
         onToggleDark={onToggleDark}
         onSignOut={onSignOut}
       />
-      <main className="flex-1 p-3 md:p-8 pb-45 max-w-5xl w-full mx-auto animate-fade-in overflow-x-hidden">
+      <main className="flex-1 p-3 md:p-8 pb-28 max-w-5xl w-full mx-auto animate-fade-in overflow-x-hidden">
         {children}
       </main>
     </div>
