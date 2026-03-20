@@ -234,13 +234,13 @@ export function Notes({ userId, isDemoMode }) {
                 <div className="space-y-3">
                   {getAvailableCommands().map(cmd => (
                     <div key={cmd.tag} className="flex items-start gap-3 text-xs">
-                      <code className="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded flex-shrink-0">
+                      <code className="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded w-12 text-center flex-shrink-0">
                         {cmd.tag}
                       </code>
                       <div className="flex-1 min-w-0">
-                        <p className="text-text-light dark:text-text-dark font-medium mb-1">{cmd.description}</p>
-                        <p className="text-muted-light dark:text-muted-dark">
-                          e.g. <span className="text-text-light dark:text-text-dark/70">{cmd.example}</span>
+                        <p className="text-text-light dark:text-text-dark font-semibold mb-1">{cmd.description}</p>
+                        <p className="text-muted-light dark:text-muted-dark text-[11px]">
+                          <span className="font-medium">Example:</span> <span className="text-text-light dark:text-text-dark/70 italic">{cmd.example}</span>
                         </p>
                       </div>
                     </div>
