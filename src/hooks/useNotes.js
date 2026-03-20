@@ -53,6 +53,7 @@ export function useNotes({ userId, isDemoMode }) {
           {
             id: 'demo-1',
             note_date: getTodayDate(),
+            title: 'Fuel Expense',
             raw_text: 'petrol 159 @e',
             parsed_type: 'expense',
             parsed_data: { description: 'Petrol', amount: 159, category: 'transport', date: getTodayDate() },
@@ -62,6 +63,7 @@ export function useNotes({ userId, isDemoMode }) {
           {
             id: 'demo-2',
             note_date: getTodayDate(),
+            title: 'Workout Session',
             raw_text: 'gym 45min @h',
             parsed_type: 'health',
             parsed_data: { metric: 'workout', value: 45, unit: 'min', note: 'Gym', date: getTodayDate() },
@@ -71,6 +73,7 @@ export function useNotes({ userId, isDemoMode }) {
           {
             id: 'demo-3',
             note_date: getTodayDate(),
+            title: '',
             raw_text: 'feeling good @casual',
             parsed_type: 'casual',
             parsed_data: { content: 'feeling good' },
@@ -80,6 +83,7 @@ export function useNotes({ userId, isDemoMode }) {
           {
             id: 'demo-4',
             note_date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+            title: 'Coffee Break',
             raw_text: 'coffee 80 @e',
             parsed_type: 'expense',
             parsed_data: { description: 'Coffee', amount: 80, category: 'food', date: new Date(Date.now() - 86400000).toISOString().split('T')[0] },
@@ -89,6 +93,7 @@ export function useNotes({ userId, isDemoMode }) {
           {
             id: 'demo-5',
             note_date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+            title: 'Family Reminder',
             raw_text: 'call mum @R 9pm tonight',
             parsed_type: 'reminder',
             parsed_data: { title: 'Call mum', remind_at: new Date().toISOString() },
@@ -130,7 +135,7 @@ export function useNotes({ userId, isDemoMode }) {
   }, [fetchEntries])
 
   // ─── Add entry ───
-  const addEntry = useCallback(async (rawText) => {
+  const addEntry = useCallback(async (rawText, title = '') => {
     if (!rawText?.trim() || !userId) return null
 
     const parsed = parseEntry(rawText)
@@ -140,6 +145,7 @@ export function useNotes({ userId, isDemoMode }) {
     const newEntry = {
       id: crypto.randomUUID(),
       note_date: today,
+      title: title || '',
       raw_text: rawText.trim(),
       parsed_type: parsed.type,
       parsed_data: parsed.data,
@@ -180,6 +186,7 @@ export function useNotes({ userId, isDemoMode }) {
           note_id: noteId,
           user_id: userId,
           note_date: today,
+          title: title || '',
           raw_text: rawText.trim(),
           parsed_type: parsed.type,
           parsed_data: parsed.data,
@@ -205,13 +212,13 @@ export function useNotes({ userId, isDemoMode }) {
   }, [userId, isDemoMode, entries])
 
   // ─── Edit entry ───
-  const editEntry = useCallback(async (id, newRawText) => {
+  const editEntry = useCallback(async (id, newRawText, newTitle = '') => {
     if (!newRawText?.trim()) return
 
     const parsed = parseEntry(newRawText)
     const updated = entries.map(e =>
       e.id === id
-        ? { ...e, raw_text: newRawText.trim(), parsed_type: parsed.type, parsed_data: parsed.data, is_edited: true }
+        ? { ...e, title: newTitle || '', raw_text: newRawText.trim(), parsed_type: parsed.type, parsed_data: parsed.data, is_edited: true }
         : e
     )
     setEntries(updated)
@@ -223,6 +230,7 @@ export function useNotes({ userId, isDemoMode }) {
       const { error } = await supabase
         .from('note_entries')
         .update({
+          title: newTitle || '',
           raw_text: newRawText.trim(),
           parsed_type: parsed.type,
           parsed_data: parsed.data,

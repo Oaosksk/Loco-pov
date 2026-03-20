@@ -9,11 +9,12 @@ function NoteCard({ entry, onEdit, onDelete }) {
   const [showMenu, setShowMenu] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(entry.raw_text)
+  const [editTitle, setEditTitle] = useState(entry.title || '')
   const color = getTagColor(entry.parsed_type)
 
   const handleSave = () => {
     if (editText.trim() && editText.trim() !== entry.raw_text) {
-      onEdit(entry.id, editText.trim())
+      onEdit(entry.id, editText.trim(), editTitle.trim())
     }
     setEditing(false)
   }
@@ -53,6 +54,12 @@ function NoteCard({ entry, onEdit, onDelete }) {
 
       {editing ? (
         <div className="space-y-2">
+          <input
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            placeholder="Note title (optional)"
+            className="input w-full text-sm font-semibold"
+          />
           <textarea
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
@@ -62,11 +69,14 @@ function NoteCard({ entry, onEdit, onDelete }) {
           />
           <div className="flex gap-2">
             <Button variant="primary" size="sm" onClick={handleSave}>Save</Button>
-            <Button variant="ghost" size="sm" onClick={() => { setEditText(entry.raw_text); setEditing(false) }}>Cancel</Button>
+            <Button variant="ghost" size="sm" onClick={() => { setEditText(entry.raw_text); setEditTitle(entry.title || ''); setEditing(false) }}>Cancel</Button>
           </div>
         </div>
       ) : (
         <>
+          {entry.title && (
+            <h4 className="font-bold text-text-light dark:text-text-dark mb-2">{entry.title}</h4>
+          )}
           <p className="text-sm text-text-light dark:text-text-dark mb-3 line-clamp-3">{entry.raw_text}</p>
           <div className="flex items-center justify-between text-xs text-muted-light dark:text-muted-dark">
             <span>{new Date(entry.entry_time).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
@@ -106,18 +116,20 @@ function FolderCard({ type, count, onClick }) {
 
 function AddNoteSheet({ open, onClose, onAdd }) {
   const [input, setInput] = useState('')
+  const [title, setTitle] = useState('')
   const activeTags = useMemo(() => detectTags(input), [input])
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!input.trim()) return
-    onAdd(input.trim())
+    onAdd(input.trim(), title.trim())
     setInput('')
+    setTitle('')
     onClose()
   }
 
   return (
-    <Sheet open={open} onClose={() => { setInput(''); onClose() }} title="New Note">
+    <Sheet open={open} onClose={() => { setInput(''); setTitle(''); onClose() }} title="New Note">
       <form onSubmit={handleSubmit} className="space-y-4">
         {activeTags.length > 0 && (
           <div className="flex gap-2 flex-wrap">
@@ -132,6 +144,15 @@ function AddNoteSheet({ open, onClose, onAdd }) {
           </div>
         )}
         <div>
+          <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-1">Note Title (Optional)</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g., Morning Routine, Shopping List"
+            className="input"
+          />
+        </div>
+        <div>
           <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-1">Note Content *</label>
           <textarea
             autoFocus
@@ -144,7 +165,7 @@ function AddNoteSheet({ open, onClose, onAdd }) {
           />
         </div>
         <div className="flex gap-3 pt-2">
-          <Button variant="ghost" type="button" onClick={() => { setInput(''); onClose() }} className="flex-1 justify-center">Cancel</Button>
+          <Button variant="ghost" type="button" onClick={() => { setInput(''); setTitle(''); onClose() }} className="flex-1 justify-center">Cancel</Button>
           <Button variant="primary" type="submit" className="flex-1 justify-center">Create Note</Button>
         </div>
       </form>
@@ -198,8 +219,8 @@ export function Notes({ userId, isDemoMode }) {
     return list
   }, [entries, filterType, search])
 
-  const handleAddNote = async (text) => {
-    await addEntry(text)
+  const handleAddNote = async (text, title) => {
+    await addEntry(text, title)
   }
 
   return (
