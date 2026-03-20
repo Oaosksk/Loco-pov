@@ -234,7 +234,7 @@ export function Notes({ userId, isDemoMode }) {
                 <div className="space-y-3">
                   {getAvailableCommands().map(cmd => (
                     <div key={cmd.tag} className="flex items-start gap-3 text-xs">
-                      <code className="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded w-12 text-center flex-shrink-0">
+                      <code className="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded min-w-[70px] text-center flex-shrink-0">
                         {cmd.tag}
                       </code>
                       <div className="flex-1 min-w-0">
