@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Button } from './ui/Button'
-import { Zap, BookOpen, Target, Brain, HardDrive, X } from 'lucide-react'
-import { getRememberedAccounts, forgetAccount } from '../hooks/useAuth'
+import { Zap, BookOpen, Target, Brain, HardDrive } from 'lucide-react'
 
 function Feature({ icon: Icon, label }) {
   return (
@@ -14,54 +13,7 @@ function Feature({ icon: Icon, label }) {
   )
 }
 
-function RememberedAccount({ account, onSelect, onForget }) {
-  return (
-    <button
-      onClick={() => onSelect(account)}
-      className="w-full flex items-center gap-3 p-3 rounded-xl bg-bg-light dark:bg-bg-dark hover:bg-border-light dark:hover:bg-border-dark transition-colors group relative"
-    >
-      {account.avatar ? (
-        <img src={account.avatar} alt={account.name} className="w-10 h-10 rounded-full" />
-      ) : (
-        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-          {account.name?.charAt(0).toUpperCase() || account.email?.charAt(0).toUpperCase()}
-        </div>
-      )}
-      <div className="flex-1 text-left min-w-0">
-        <p className="text-sm font-semibold text-text-light dark:text-text-dark truncate">{account.name}</p>
-        <p className="text-xs text-muted-light dark:text-muted-dark truncate">{account.email}</p>
-      </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onForget(account.email)
-        }}
-        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-opacity"
-        title="Forget this account"
-      >
-        <X size={14} className="text-red-500" />
-      </button>
-    </button>
-  )
-}
-
 export function AuthScreen({ onSignIn, loading }) {
-  const [rememberedAccounts, setRememberedAccounts] = useState([])
-
-  useEffect(() => {
-    setRememberedAccounts(getRememberedAccounts())
-  }, [])
-
-  const handleForget = (email) => {
-    forgetAccount(email)
-    setRememberedAccounts(getRememberedAccounts())
-  }
-
-  const handleSelectAccount = (account) => {
-    // Trigger Google sign-in (user will select the account in Google's UI)
-    onSignIn()
-  }
-
   return (
     <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex items-center justify-center p-4">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl">
@@ -103,34 +55,9 @@ export function AuthScreen({ onSignIn, loading }) {
           <h2 className="text-2xl font-bold font-serif text-text-light dark:text-text-dark mb-2">
             Welcome back 👋
           </h2>
-          <p className="text-muted-light dark:text-muted-dark text-sm mb-6">
+          <p className="text-muted-light dark:text-muted-dark text-sm mb-8">
             Sign in with Google to sync your data across devices.
           </p>
-
-          {/* Remembered Accounts */}
-          {rememberedAccounts.length > 0 && (
-            <div className="mb-6">
-              <p className="text-xs font-semibold text-muted-light dark:text-muted-dark mb-3">Previously used accounts</p>
-              <div className="space-y-2">
-                {rememberedAccounts.map(account => (
-                  <RememberedAccount
-                    key={account.email}
-                    account={account}
-                    onSelect={handleSelectAccount}
-                    onForget={handleForget}
-                  />
-                ))}
-              </div>
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border-light dark:border-border-dark" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-surface-light dark:bg-surface-dark px-2 text-muted-light dark:text-muted-dark">or</span>
-                </div>
-              </div>
-            </div>
-          )}
 
           <Button
             variant="primary"
@@ -144,8 +71,22 @@ export function AuthScreen({ onSignIn, loading }) {
               <path d="M12.6 27.5A12 12 0 0 1 12 24c0-1.2.2-2.4.6-3.5V15.2H6A20 20 0 0 0 4 24c0 3.2.8 6.2 2 8.8l6.6-5.3z" fill="#FBBC05"/>
               <path d="M24 12c3 0 5.7 1 7.8 3l5.8-5.8C34.1 5.9 29.4 4 24 4 16.2 4 9.4 8.2 6 15.2l6.6 5.3C14.2 15.6 18.7 12 24 12z" fill="#EA4335"/>
             </svg>
-            {loading ? 'Signing in…' : rememberedAccounts.length > 0 ? 'Use another account' : 'Continue with Google'}
+            {loading ? 'Signing in…' : 'Continue with Google'}
           </Button>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border-light dark:border-border-dark" />
+            </div>
+           
+          </div>
+
+          {/* <button
+            onClick={onDemoMode}
+            className="btn-ghost w-full justify-center"
+          >
+            Try with demo data
+          </button> */}
 
           <p className="text-xs text-muted-light dark:text-muted-dark mt-6 text-center leading-relaxed">
             By signing in you agree to our terms.
