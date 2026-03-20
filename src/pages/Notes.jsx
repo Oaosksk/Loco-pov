@@ -233,7 +233,7 @@ export function Notes({ userId, isDemoMode }) {
                 </div>
                 <div className="space-y-3">
                   {getAvailableCommands().map(cmd => (
-                    <div key={cmd.tag} className="flex items-start gap-3 text-xs p-3 rounded-xl bg-bg-light dark:bg-bg-dark">
+                    <div key={cmd.tag} className="flex items-start gap-3 text-xs">
                       <code className="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded flex-shrink-0">
                         {cmd.tag}
                       </code>
