@@ -159,6 +159,20 @@ export function Notes({ userId, isDemoMode }) {
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [viewMode, setViewMode] = useState('folders') // 'folders' or 'all'
+  const helpRef = useRef(null)
+
+  // Close help dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (helpRef.current && !helpRef.current.contains(e.target)) {
+        setShowHelp(false)
+      }
+    }
+    if (showHelp) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showHelp])
 
   // Group entries by type for folder view
   const folderGroups = useMemo(() => {
@@ -199,44 +213,48 @@ export function Notes({ userId, isDemoMode }) {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => setShowHelp(!showHelp)}
-            className={`btn-icon ${showHelp ? 'text-primary' : ''}`}
-            title="Help"
-          >
-            <HelpCircle size={18} />
-          </button>
+          <div className="relative" ref={helpRef}>
+            <button
+              onClick={() => setShowHelp(!showHelp)}
+              className={`btn-icon ${showHelp ? 'text-primary' : ''}`}
+              title="Help"
+            >
+              <HelpCircle size={18} />
+            </button>
+            
+            {/* Floating Help Dropdown */}
+            {showHelp && (
+              <div className="absolute right-0 top-12 w-96 max-h-[500px] overflow-y-auto bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-2xl shadow-2xl p-5 z-50 animate-slide-up">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold font-serif text-text-light dark:text-text-dark">@ Commands</h3>
+                  <button onClick={() => setShowHelp(false)} className="btn-icon">
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {getAvailableCommands().map(cmd => (
+                    <div key={cmd.tag} className="flex items-start gap-3 text-xs p-3 rounded-xl bg-bg-light dark:bg-bg-dark">
+                      <code className="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded flex-shrink-0">
+                        {cmd.tag}
+                      </code>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-text-light dark:text-text-dark font-medium mb-1">{cmd.description}</p>
+                        <p className="text-muted-light dark:text-muted-dark">
+                          e.g. <span className="text-text-light dark:text-text-dark/70">{cmd.example}</span>
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <Button variant="primary" onClick={() => setShowAddNote(true)}>
             <Plus size={16} />
             Add Note
           </Button>
         </div>
       </div>
-
-      {/* Command Help */}
-      {showHelp && (
-        <div className="card p-4 animate-slide-up">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold font-serif text-text-light dark:text-text-dark">@ Commands</h3>
-            <button onClick={() => setShowHelp(false)} className="btn-icon"><X size={14} /></button>
-          </div>
-          <div className="space-y-2">
-            {getAvailableCommands().map(cmd => (
-              <div key={cmd.tag} className="flex items-start gap-3 text-xs">
-                <code className="text-primary font-mono font-bold bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">
-                  {cmd.tag}
-                </code>
-                <div className="flex-1 min-w-0">
-                  <p className="text-text-light dark:text-text-dark font-medium">{cmd.description}</p>
-                  <p className="text-muted-light dark:text-muted-dark mt-0.5">
-                    e.g. <span className="text-text-light dark:text-text-dark/70">{cmd.example}</span>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Search & Filter */}
       <div className="flex gap-3 items-center">
