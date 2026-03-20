@@ -1,76 +1,124 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { parseEntry } from '../lib/parseEntry'
 
-const LS_KEY = 'loco_notes_cache'
+const LS_BUFFER_KEY = 'loco_notes_buffer'   // offline buffer
+const LS_CACHE_KEY  = 'loco_entries_cache'  // cached entries for display
 
-// Demo notes used when no Supabase session
-const DEMO_NOTES = [
-  {
-    id: '1',
-    title: 'Welcome to Loco!',
-    body: 'This is a demo note. Connect Supabase to persist your notes in the cloud.',
-    tag: 'personal',
-    is_public: false,
-    share_token: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Book ideas 📚',
-    body: 'Atomic Habits, Deep Work, The Almanack of Naval Ravikant. Read one chapter per day.',
-    tag: 'ideas',
-    is_public: false,
-    share_token: null,
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Q2 Work Milestones',
-    body: 'Launch MVP by end of April. Hire one full-stack dev. Reach 500 signups.',
-    tag: 'work',
-    is_public: false,
-    share_token: null,
-    created_at: new Date(Date.now() - 172800000).toISOString(),
-    updated_at: new Date(Date.now() - 172800000).toISOString(),
-  },
-]
+function getTodayDate() {
+  return new Date().toISOString().split('T')[0]
+}
 
+// Group entries by date for display
+function groupByDate(entries) {
+  const groups = {}
+  for (const entry of entries) {
+    const date = entry.note_date || entry.entry_time?.split('T')[0] || getTodayDate()
+    if (!groups[date]) groups[date] = []
+    groups[date].push(entry)
+  }
+  // Sort dates descending, entries within each date by time ascending
+  const sorted = Object.keys(groups).sort((a, b) => b.localeCompare(a))
+  return sorted.map(date => ({
+    date,
+    entries: groups[date].sort((a, b) => (a.entry_time || '').localeCompare(b.entry_time || '')),
+  }))
+}
+
+/**
+ * Rolling daily journal hook.
+ * - One note per day per user (upserted)
+ * - Entries are individual parsed lines with timestamps
+ * - Offline-first: writes to localStorage buffer, syncs to Supabase
+ */
 export function useNotes({ userId, isDemoMode }) {
-  const [notes, setNotes] = useState([])
+  const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const syncingRef = useRef(false)
 
-  const fetchNotes = useCallback(async () => {
+  // ─── Load entries ───
+  const fetchEntries = useCallback(async () => {
     if (!userId) return
     setLoading(true)
     setError(null)
 
     if (isDemoMode) {
-      const cached = localStorage.getItem(LS_KEY)
-      setNotes(cached ? JSON.parse(cached) : DEMO_NOTES)
+      const cached = localStorage.getItem(LS_CACHE_KEY)
+      if (cached) {
+        setEntries(JSON.parse(cached))
+      } else {
+        // Seed demo entries
+        const demoEntries = [
+          {
+            id: 'demo-1',
+            note_date: getTodayDate(),
+            raw_text: 'petrol 159 @e',
+            parsed_type: 'expense',
+            parsed_data: { description: 'Petrol', amount: 159, category: 'transport', date: getTodayDate() },
+            entry_time: new Date().toISOString(),
+            is_edited: false,
+          },
+          {
+            id: 'demo-2',
+            note_date: getTodayDate(),
+            raw_text: 'gym 45min @h',
+            parsed_type: 'health',
+            parsed_data: { metric: 'workout', value: 45, unit: 'min', note: 'Gym', date: getTodayDate() },
+            entry_time: new Date(Date.now() - 3600000).toISOString(),
+            is_edited: false,
+          },
+          {
+            id: 'demo-3',
+            note_date: getTodayDate(),
+            raw_text: 'feeling good @casual',
+            parsed_type: 'casual',
+            parsed_data: { content: 'feeling good' },
+            entry_time: new Date(Date.now() - 7200000).toISOString(),
+            is_edited: false,
+          },
+          {
+            id: 'demo-4',
+            note_date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+            raw_text: 'coffee 80 @e',
+            parsed_type: 'expense',
+            parsed_data: { description: 'Coffee', amount: 80, category: 'food', date: new Date(Date.now() - 86400000).toISOString().split('T')[0] },
+            entry_time: new Date(Date.now() - 86400000).toISOString(),
+            is_edited: false,
+          },
+          {
+            id: 'demo-5',
+            note_date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+            raw_text: 'call mum @R 9pm tonight',
+            parsed_type: 'reminder',
+            parsed_data: { title: 'Call mum', remind_at: new Date().toISOString() },
+            entry_time: new Date(Date.now() - 82800000).toISOString(),
+            is_edited: false,
+          },
+        ]
+        setEntries(demoEntries)
+        localStorage.setItem(LS_CACHE_KEY, JSON.stringify(demoEntries))
+      }
       setLoading(false)
       return
     }
 
     try {
-      const { data, error } = await supabase
-        .from('notes')
+      // Fetch note_entries from Supabase (joined with notes)
+      const { data, error: fetchErr } = await supabase
+        .from('note_entries')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .order('entry_time', { ascending: false })
+        .limit(200)
 
-      if (error) throw error
+      if (fetchErr) throw fetchErr
 
-      setNotes(data)
-      // Cache for offline
-      localStorage.setItem(LS_KEY, JSON.stringify(data))
+      setEntries(data || [])
+      localStorage.setItem(LS_CACHE_KEY, JSON.stringify(data || []))
     } catch (err) {
       console.error('[Notes] Fetch error:', err.message)
-      // Fall back to localStorage cache
-      const cached = localStorage.getItem(LS_KEY)
-      if (cached) setNotes(JSON.parse(cached))
+      const cached = localStorage.getItem(LS_CACHE_KEY)
+      if (cached) setEntries(JSON.parse(cached))
       setError(err.message)
     } finally {
       setLoading(false)
@@ -78,99 +126,287 @@ export function useNotes({ userId, isDemoMode }) {
   }, [userId, isDemoMode])
 
   useEffect(() => {
-    fetchNotes()
-  }, [fetchNotes])
+    fetchEntries()
+  }, [fetchEntries])
 
-  const addNote = async ({ title, body, tag }) => {
-    const newNote = {
+  // ─── Add entry ───
+  const addEntry = useCallback(async (rawText) => {
+    if (!rawText?.trim() || !userId) return null
+
+    const parsed = parseEntry(rawText)
+    const today = getTodayDate()
+    const now = new Date().toISOString()
+
+    const newEntry = {
       id: crypto.randomUUID(),
-      title,
-      body,
-      tag: tag || 'personal',
-      is_public: false,
-      share_token: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      note_date: today,
+      raw_text: rawText.trim(),
+      parsed_type: parsed.type,
+      parsed_data: parsed.data,
+      entry_time: now,
+      is_edited: false,
       user_id: userId,
     }
 
-    if (isDemoMode) {
-      const updated = [newNote, ...notes]
-      setNotes(updated)
-      localStorage.setItem(LS_KEY, JSON.stringify(updated))
-      return newNote
-    }
+    // Optimistic update
+    const updated = [newEntry, ...entries]
+    setEntries(updated)
+    localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
+
+    if (isDemoMode) return newEntry
 
     try {
-      const { data, error } = await supabase
+      // Ensure note for today exists (upsert)
+      const { data: noteData, error: noteErr } = await supabase
         .from('notes')
-        .insert({ title, body, tag: tag || 'personal', user_id: userId })
+        .upsert(
+          { user_id: userId, note_date: today },
+          { onConflict: 'user_id,note_date' }
+        )
         .select()
         .single()
 
-      if (error) throw error
+      if (noteErr) {
+        // If the upsert fails, try to get existing
+        console.warn('[Notes] Upsert note warning:', noteErr.message)
+      }
 
-      const updated = [data, ...notes]
-      setNotes(updated)
-      localStorage.setItem(LS_KEY, JSON.stringify(updated))
-      return data
+      const noteId = noteData?.id
+
+      // Insert the entry
+      const { data: entryData, error: entryErr } = await supabase
+        .from('note_entries')
+        .insert({
+          note_id: noteId,
+          user_id: userId,
+          note_date: today,
+          raw_text: rawText.trim(),
+          parsed_type: parsed.type,
+          parsed_data: parsed.data,
+          entry_time: now,
+        })
+        .select()
+        .single()
+
+      if (entryErr) throw entryErr
+
+      // Route to appropriate table based on type
+      await routeParsedData(parsed, entryData?.id || newEntry.id, userId)
+
+      return entryData || newEntry
     } catch (err) {
-      console.error('[Notes] Add error:', err.message)
-      throw err
+      console.error('[Notes] Add entry error:', err.message)
+      // Save to offline buffer
+      const buffer = JSON.parse(localStorage.getItem(LS_BUFFER_KEY) || '[]')
+      buffer.push(newEntry)
+      localStorage.setItem(LS_BUFFER_KEY, JSON.stringify(buffer))
+      return newEntry
     }
-  }
+  }, [userId, isDemoMode, entries])
 
-  const updateNote = async (id, changes) => {
-    const updated = notes.map((n) =>
-      n.id === id ? { ...n, ...changes, updated_at: new Date().toISOString() } : n
+  // ─── Edit entry ───
+  const editEntry = useCallback(async (id, newRawText) => {
+    if (!newRawText?.trim()) return
+
+    const parsed = parseEntry(newRawText)
+    const updated = entries.map(e =>
+      e.id === id
+        ? { ...e, raw_text: newRawText.trim(), parsed_type: parsed.type, parsed_data: parsed.data, is_edited: true }
+        : e
     )
-    setNotes(updated)
-    localStorage.setItem(LS_KEY, JSON.stringify(updated))
+    setEntries(updated)
+    localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
 
     if (isDemoMode) return
 
     try {
       const { error } = await supabase
-        .from('notes')
-        .update({ ...changes, updated_at: new Date().toISOString() })
+        .from('note_entries')
+        .update({
+          raw_text: newRawText.trim(),
+          parsed_type: parsed.type,
+          parsed_data: parsed.data,
+          is_edited: true,
+        })
         .eq('id', id)
 
       if (error) throw error
     } catch (err) {
-      console.error('[Notes] Update error:', err.message)
-      throw err
+      console.error('[Notes] Edit entry error:', err.message)
     }
-  }
+  }, [entries, isDemoMode])
 
-  const deleteNote = async (id) => {
-    const updated = notes.filter((n) => n.id !== id)
-    setNotes(updated)
-    localStorage.setItem(LS_KEY, JSON.stringify(updated))
+  // ─── Delete entry ───
+  const deleteEntry = useCallback(async (id) => {
+    const updated = entries.filter(e => e.id !== id)
+    setEntries(updated)
+    localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
 
     if (isDemoMode) return
 
     try {
       const { error } = await supabase
-        .from('notes')
+        .from('note_entries')
         .delete()
         .eq('id', id)
 
       if (error) throw error
     } catch (err) {
-      console.error('[Notes] Delete error:', err.message)
-      throw err
+      console.error('[Notes] Delete entry error:', err.message)
     }
-  }
+  }, [entries, isDemoMode])
 
-  const shareNote = async (id) => {
-    const token = crypto.randomUUID().replace(/-/g, '')
-    await updateNote(id, { is_public: true, share_token: token })
-    return token
-  }
+  // ─── Sync offline buffer ───
+  const syncBuffer = useCallback(async () => {
+    if (isDemoMode || syncingRef.current) return
+    const buffer = JSON.parse(localStorage.getItem(LS_BUFFER_KEY) || '[]')
+    if (buffer.length === 0) return
 
-  const unshareNote = async (id) => {
-    await updateNote(id, { is_public: false, share_token: null })
-  }
+    syncingRef.current = true
+    const remaining = []
 
-  return { notes, loading, error, fetchNotes, addNote, updateNote, deleteNote, shareNote, unshareNote }
+    for (const entry of buffer) {
+      try {
+        const { error } = await supabase
+          .from('note_entries')
+          .insert({
+            user_id: entry.user_id,
+            note_date: entry.note_date,
+            raw_text: entry.raw_text,
+            parsed_type: entry.parsed_type,
+            parsed_data: entry.parsed_data,
+            entry_time: entry.entry_time,
+          })
+
+        if (error) {
+          remaining.push(entry)
+        }
+      } catch {
+        remaining.push(entry)
+      }
+    }
+
+    localStorage.setItem(LS_BUFFER_KEY, JSON.stringify(remaining))
+    syncingRef.current = false
+
+    if (remaining.length < buffer.length) {
+      fetchEntries() // refresh from server after sync
+    }
+  }, [isDemoMode, fetchEntries])
+
+  // Try to sync buffer on mount and periodically
+  useEffect(() => {
+    if (isDemoMode) return
+    syncBuffer()
+    const interval = setInterval(syncBuffer, 30000) // every 30s
+    return () => clearInterval(interval)
+  }, [syncBuffer, isDemoMode])
+
+  // Grouped data for display
+  const groupedEntries = groupByDate(entries)
+
+  return {
+    entries,
+    groupedEntries,
+    loading,
+    error,
+    addEntry,
+    editEntry,
+    deleteEntry,
+    fetchEntries,
+  }
+}
+
+// ─── Route parsed data to related tables ───
+async function routeParsedData(parsed, entryId, userId) {
+  try {
+    switch (parsed.type) {
+      case 'expense': {
+        const { description, amount, category, date } = parsed.data
+        await supabase.from('expenses').insert({
+          user_id: userId,
+          note_entry_id: entryId,
+          description,
+          amount,
+          category,
+          date,
+        })
+        break
+      }
+      case 'health': {
+        const { metric, value, unit, note, date } = parsed.data
+        await supabase.from('health_logs').insert({
+          user_id: userId,
+          note_entry_id: entryId,
+          metric,
+          value,
+          unit,
+          note,
+          date,
+        })
+        break
+      }
+      case 'reminder': {
+        const { title, remind_at } = parsed.data
+        await supabase.from('reminders').insert({
+          user_id: userId,
+          note_entry_id: entryId,
+          title,
+          remind_at,
+          push_sent: false,
+        })
+        break
+      }
+      case 'subscription': {
+        const { name, amount, cycle } = parsed.data
+        await supabase.from('subscriptions').insert({
+          user_id: userId,
+          note_entry_id: entryId,
+          name,
+          amount,
+          cycle,
+          next_due: calculateNextDue(cycle),
+          remind_days_before: 3,
+        })
+        break
+      }
+      case 'goal': {
+        const { title } = parsed.data
+        await supabase.from('goals').insert({
+          user_id: userId,
+          title,
+          progress: 0,
+          target: 100,
+          unit: '%',
+          status: 'active',
+        })
+        break
+      }
+      default:
+        break
+    }
+  } catch (err) {
+    console.error(`[Notes] Route ${parsed.type} error:`, err.message)
+  }
+}
+
+function calculateNextDue(cycle) {
+  const now = new Date()
+  switch (cycle) {
+    case 'weekly':
+      now.setDate(now.getDate() + 7)
+      break
+    case 'monthly':
+      now.setMonth(now.getMonth() + 1)
+      break
+    case 'quarterly':
+      now.setMonth(now.getMonth() + 3)
+      break
+    case 'yearly':
+      now.setFullYear(now.getFullYear() + 1)
+      break
+    default:
+      now.setMonth(now.getMonth() + 1)
+  }
+  return now.toISOString().split('T')[0]
 }

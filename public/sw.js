@@ -1,4 +1,4 @@
-const CACHE_NAME = 'loco-v1'
+const CACHE_NAME = 'loco-v3'
 const STATIC_ASSETS = [
   '/',
   '/index.html',

@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, BookOpen, Wallet, Target, Heart,
-  Zap, Sun, Moon, LogOut, MoreVertical,
-  /* PanelLeft, X */
+  LayoutDashboard, BookOpen, Wallet, Target, Heart, CalendarClock,
+  Zap, Sun, Moon, LogOut, MoreVertical, Brain, Settings,
 } from 'lucide-react'
 
 // Main bottom nav items
@@ -11,12 +10,14 @@ const MAIN_NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/notes',     label: 'Notes',     icon: BookOpen         },
   { to: '/goals',     label: 'Goals',     icon: Target           },
-  { to: '/expenses',  label: 'Expenses',  icon: Wallet           },
 ]
 
 // Items hidden inside the ⋮ more menu
 const MORE_NAV = [
-  { to: '/health', label: 'Health', icon: Heart  },
+  { to: '/expenses',  label: 'Expenses', icon: Wallet       },
+  { to: '/health',    label: 'Health',   icon: Heart        },
+  { to: '/ai',        label: 'AI',       icon: Brain        },
+  { to: '/settings',  label: 'Settings', icon: Settings     },
 ]
 
 function Avatar({ user }) {
@@ -35,113 +36,8 @@ function Avatar({ user }) {
   )
 }
 
-// Desktop sidebar
-function Sidebar({ user, isDark, onToggleDark, onSignOut, isDemoMode }) {
-  return (
-    <aside className="hidden md:flex flex-col w-[220px] min-h-screen flex-shrink-0
-                      bg-surface-dark shadow-sidebar">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-6">
-        <div className="w-8 h-8 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
-          <Zap size={16} className="text-primary" />
-        </div>
-        <span className="text-xl font-bold text-white font-serif">Loco</span>
-        {isDemoMode && (
-          <span className="ml-auto text-[10px] font-semibold text-accent bg-accent/20 px-2 py-0.5 rounded-full">
-            DEMO
-          </span>
-        )}
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 space-y-1">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `sidebar-link ${isActive ? 'active' : ''}`
-            }
-          >
-            <Icon size={18} />
-            {label}
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* Footer */}
-      <div className="px-3 pb-5 space-y-1">
-        {/* Dark mode */}
-        <button
-          onClick={onToggleDark}
-          className="sidebar-link w-full text-left"
-        >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          {isDark ? 'Light mode' : 'Dark mode'}
-        </button>
-
-        {/* User */}
-        <div className="flex items-center gap-2 px-4 py-2.5">
-          <Avatar user={user} />
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-semibold truncate">
-              {user?.user_metadata?.full_name || user?.email || 'Demo User'}
-            </p>
-          </div>
-          <button
-            onClick={onSignOut}
-            className="text-white/50 hover:text-white transition-colors"
-            title="Sign out"
-          >
-            <LogOut size={15} />
-          </button>
-        </div>
-      </div>
-    </aside>
-  )
-}
-
-// Floating sidebar — hidden until needed
-// function FloatingSidebar({ onClose, open }) {
-//   return (
-//     <aside className={`fixed top-1/2 left-4 -translate-y-1/2 z-50 w-56 flex flex-col
-//                       bg-surface-dark rounded-xl shadow-card-dark border border-border-dark
-//                       overflow-hidden transition-all duration-300
-//                       ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-//
-//       {/* Nav only */}
-//       <nav className="px-2 py-3 space-y-1">
-//         {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-//           <NavLink
-//             key={to}
-//             to={to}
-//             className={({ isActive }) =>
-//               `flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors
-//                ${isActive ? 'bg-white/15 text-white' : 'text-white/50 hover:text-white hover:bg-white/10'}`
-//             }
-//           >
-//             <Icon size={15} />
-//             {label}
-//           </NavLink>
-//         ))}
-//       </nav>
-//
-//       {/* Cancel button */}
-//       <div className="px-2 pb-3 pt-1 border-t border-border-dark">
-//         <button
-//           onClick={onClose}
-//           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
-//                      text-sm font-semibold text-white/50 hover:text-white hover:bg-white/10 transition-colors">
-//           <X size={15} />
-//           Cancel
-//         </button>
-//       </div>
-//     </aside>
-//   )
-// }
-
 // Top bar + bottom nav
-function BottomNav({ user, isDark, onToggleDark, onSignOut /*, onToggleSidebar, sidebarOpen */ }) {
+function BottomNav({ user, isDark, onToggleDark, onSignOut }) {
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef(null)
   const navigate = useNavigate()
@@ -202,12 +98,12 @@ function BottomNav({ user, isDark, onToggleDark, onSignOut /*, onToggleSidebar, 
 
           {/* ⋮ More button with popup */}
           <div className="relative" ref={moreRef}>
-            {/* More popup — Goals & Health */}
+            {/* More popup */}
             {moreOpen && (
-              <div className="absolute bottom-12 right-0 w-40
+              <div className="absolute bottom-12 right-0 w-44
                               bg-surface-light dark:bg-surface-dark
                               border border-border-light dark:border-border-dark
-                              rounded-xl shadow-lg overflow-hidden z-50">
+                              rounded-xl shadow-lg overflow-hidden z-50 animate-slide-up">
                 {MORE_NAV.map(({ to, label, icon: Icon }) => (
                   <button
                     key={to}
@@ -248,18 +144,13 @@ function BottomNav({ user, isDark, onToggleDark, onSignOut /*, onToggleSidebar, 
 }
 
 export function Layout({ user, isDark, onToggleDark, onSignOut, isDemoMode, children }) {
-  // const [sidebarOpen, setSidebarOpen] = useState(false) // sidebar hidden until needed
-
   return (
     <div className="flex flex-col min-h-screen bg-bg-light dark:bg-bg-dark">
-      {/* <FloatingSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} /> */}
       <BottomNav
         user={user}
         isDark={isDark}
         onToggleDark={onToggleDark}
         onSignOut={onSignOut}
-        // onToggleSidebar={() => setSidebarOpen(v => !v)}
-        // sidebarOpen={sidebarOpen}
       />
       <main className="flex-1 p-3 md:p-8 pb-28 max-w-5xl w-full mx-auto animate-fade-in overflow-x-hidden">
         {children}

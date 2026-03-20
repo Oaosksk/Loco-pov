@@ -1,324 +1,400 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useNotes } from '../hooks/useNotes'
-import { SearchBar } from '../components/ui/SearchBar'
-import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
-import { Sheet } from '../components/ui/Sheet'
-import { Plus, Trash2, Share2, Copy, Check, Sparkles, Lock, Globe } from 'lucide-react'
+import { detectTags, getTagColor, getAvailableCommands } from '../lib/parseEntry'
+import { Send, Edit3, Trash2, ChevronDown, HelpCircle, X, Check, Search } from 'lucide-react'
 
-const TAGS = ['all', 'personal', 'work', 'ideas', 'learning', 'health']
-
-const TAG_COLORS = {
-  personal: 'tag-personal',
-  work: 'tag-work',
-  ideas: 'tag-ideas',
-  learning: 'tag-learning',
-  health: 'tag-health',
+function formatDayHeader(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00')
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  
+  const isToday = dateStr === today.toISOString().split('T')[0]
+  const isYesterday = dateStr === yesterday.toISOString().split('T')[0]
+  
+  if (isToday) return '📅 Today'
+  if (isYesterday) return '📅 Yesterday'
+  
+  return `📅 ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
 }
 
-function formatDate(iso) {
+function formatTime(iso) {
+  if (!iso) return ''
   const d = new Date(iso)
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
-function NoteCard({ note, onDelete, onShare, onUnshare, onSummarise, apiKey }) {
-  const [copied, setCopied] = useState(false)
-  const [summarising, setSummarising] = useState(false)
-  const [summary, setSummary] = useState('')
+function TypeBadge({ type }) {
+  const color = getTagColor(type)
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${color.bg} ${color.text}`}>
+      {color.label}
+    </span>
+  )
+}
+
+function EntryLine({ entry, onEdit, onDelete }) {
+  const [editing, setEditing] = useState(false)
+  const [editText, setEditText] = useState(entry.raw_text)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const editRef = useRef(null)
 
-  const shareUrl = note.share_token
-    ? `${window.location.origin}/share/${note.share_token}`
-    : null
-
-  const handleCopy = () => {
-    if (shareUrl) {
-      navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+  useEffect(() => {
+    if (editing && editRef.current) {
+      editRef.current.focus()
+      editRef.current.setSelectionRange(editText.length, editText.length)
     }
+  }, [editing])
+
+  const handleSaveEdit = () => {
+    if (editText.trim() && editText.trim() !== entry.raw_text) {
+      onEdit(entry.id, editText.trim())
+    }
+    setEditing(false)
   }
 
-  const handleShare = async () => {
-    if (note.is_public) {
-      await onUnshare(note.id)
-    } else {
-      await onShare(note.id)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSaveEdit()
     }
-  }
-
-  const handleSummarise = async () => {
-    if (!apiKey) {
-      setSummary('⚠️ Set a Groq API key in the AI tab first.')
-      return
-    }
-    setSummarising(true)
-    setSummary('')
-    try {
-      const { summariseNote } = await import('../lib/groq')
-      const result = await summariseNote({ apiKey, note })
-      setSummary(result)
-    } catch (err) {
-      setSummary(`Error: ${err.message}`)
-    } finally {
-      setSummarising(false)
+    if (e.key === 'Escape') {
+      setEditText(entry.raw_text)
+      setEditing(false)
     }
   }
 
   return (
-    <div className="card p-5 flex flex-col gap-3 group">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="font-bold font-serif text-text-light dark:text-text-dark leading-snug">
-          {note.title}
-        </h3>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-          <button
-            onClick={handleShare}
-            className="btn-icon"
-            title={note.is_public ? 'Make private' : 'Share'}
-          >
-            {note.is_public ? <Globe size={15} className="text-green-500" /> : <Share2 size={15} />}
-          </button>
-          <button
-            onClick={handleSummarise}
-            className="btn-icon"
-            title="AI Summarise"
-            disabled={summarising}
-          >
-            <Sparkles size={15} className={summarising ? 'animate-pulse text-accent' : ''} />
-          </button>
-          <button
-            onClick={() => confirmDelete ? onDelete(note.id) : setConfirmDelete(true)}
-            className={`btn-icon ${confirmDelete ? 'text-red-500' : ''}`}
-            title={confirmDelete ? 'Click again to confirm' : 'Delete'}
-            onBlur={() => setConfirmDelete(false)}
-          >
-            <Trash2 size={15} />
-          </button>
-        </div>
+    <div className="group flex items-start gap-3 py-2.5 px-3 -mx-3 rounded-xl hover:bg-surface-light dark:hover:bg-[#111111] transition-colors">
+      {/* Time */}
+      <span className="text-[11px] text-muted-light dark:text-muted-dark font-mono mt-0.5 w-12 flex-shrink-0">
+        {formatTime(entry.entry_time)}
+      </span>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <div className="flex gap-2">
+            <input
+              ref={editRef}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="input flex-1 text-sm py-1.5"
+            />
+            <button onClick={handleSaveEdit} className="btn-icon text-green-500">
+              <Check size={14} />
+            </button>
+            <button onClick={() => { setEditText(entry.raw_text); setEditing(false) }} className="btn-icon text-muted-light dark:text-muted-dark">
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm text-text-light dark:text-text-dark leading-relaxed">
+              {entry.raw_text}
+            </p>
+            <TypeBadge type={entry.parsed_type} />
+            {entry.is_edited && (
+              <span className="text-[10px] text-muted-light dark:text-muted-dark italic">(edited)</span>
+            )}
+          </div>
+        )}
+
+        {/* Parsed data preview */}
+        {!editing && entry.parsed_type === 'expense' && entry.parsed_data?.amount > 0 && (
+          <p className="text-xs text-green-500 mt-0.5">
+            ₹{entry.parsed_data.amount} · {entry.parsed_data.category}
+          </p>
+        )}
+        {!editing && entry.parsed_type === 'health' && entry.parsed_data?.value && (
+          <p className="text-xs text-red-400 mt-0.5">
+            {entry.parsed_data.value}{entry.parsed_data.unit} · {entry.parsed_data.metric}
+          </p>
+        )}
+        {!editing && entry.parsed_type === 'reminder' && entry.parsed_data?.remind_at && (
+          <p className="text-xs text-blue-400 mt-0.5">
+            ⏰ {new Date(entry.parsed_data.remind_at).toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+          </p>
+        )}
       </div>
 
-      {/* Body preview */}
-      {note.body && (
-        <p className="text-sm text-muted-light dark:text-muted-dark line-clamp-3 leading-relaxed">
-          {note.body}
-        </p>
-      )}
-
-      {/* Summary */}
-      {(summarising || summary) && (
-        <div className="rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20 p-3 text-xs text-text-light dark:text-text-dark leading-relaxed">
-          {summarising ? (
-            <span className="text-muted-light dark:text-muted-dark animate-pulse">Summarising…</span>
-          ) : (
-            summary
-          )}
-        </div>
-      )}
-
-      {/* Share URL */}
-      {note.is_public && shareUrl && (
-        <div className="flex items-center gap-2 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-3 py-2">
-          <Globe size={13} className="text-green-600 dark:text-green-400 flex-shrink-0" />
-          <span className="text-xs text-green-700 dark:text-green-300 truncate flex-1">{shareUrl}</span>
-          <button
-            onClick={handleCopy}
-            className="flex-shrink-0 text-green-600 dark:text-green-400 hover:text-green-800 transition-colors"
-          >
-            {copied ? <Check size={13} /> : <Copy size={13} />}
-          </button>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between mt-auto pt-1">
-        <span className={`tag ${TAG_COLORS[note.tag] || 'tag-personal'}`}>{note.tag}</span>
-        <span className="text-xs text-muted-light dark:text-muted-dark">{formatDate(note.updated_at)}</span>
+      {/* Actions */}
+      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+        <button
+          onClick={() => setEditing(true)}
+          className="btn-icon"
+          title="Edit"
+        >
+          <Edit3 size={13} />
+        </button>
+        <button
+          onClick={() => {
+            if (confirmDelete) {
+              onDelete(entry.id)
+            } else {
+              setConfirmDelete(true)
+              setTimeout(() => setConfirmDelete(false), 3000)
+            }
+          }}
+          className={`btn-icon ${confirmDelete ? 'text-red-500' : ''}`}
+          title={confirmDelete ? 'Click again to confirm' : 'Delete'}
+        >
+          <Trash2 size={13} />
+        </button>
       </div>
     </div>
   )
 }
 
-function AddNoteSheet({ open, onClose, onAdd }) {
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
-  const [tag, setTag] = useState('personal')
-  const [saving, setSaving] = useState(false)
-
-  const reset = () => { setTitle(''); setBody(''); setTag('personal') }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!title.trim()) return
-    setSaving(true)
-    try {
-      await onAdd({ title: title.trim(), body: body.trim(), tag })
-      reset()
-      onClose()
-    } catch {
-      /* error handled in hook */
-    } finally {
-      setSaving(false)
-    }
-  }
+function DayBlock({ date, entries, onEdit, onDelete }) {
+  const [collapsed, setCollapsed] = useState(false)
+  const today = new Date().toISOString().split('T')[0]
+  const isToday = date === today
 
   return (
-    <Sheet open={open} onClose={() => { reset(); onClose() }} title="New Note">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-1">
-            Title *
-          </label>
-          <input
-            autoFocus
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Note title…"
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-1">
-            Body
-          </label>
-          <textarea
-            rows={5}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Write your note here…"
-            className="textarea"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-2">
-            Tag
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {TAGS.filter(t => t !== 'all').map((t) => (
-              <button
-                type="button"
-                key={t}
-                onClick={() => setTag(t)}
-                className={`tag cursor-pointer transition-all ${
-                  tag === t
-                    ? `${TAG_COLORS[t]} ring-2 ring-offset-1 ring-primary/40`
-                    : TAG_COLORS[t]
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <Button variant="ghost" type="button" onClick={() => { reset(); onClose() }} className="flex-1 justify-center">
-            Cancel
-          </Button>
-          <Button variant="primary" type="submit" disabled={saving || !title.trim()} className="flex-1 justify-center">
-            {saving ? 'Saving…' : 'Save Note'}
-          </Button>
-        </div>
-      </form>
-    </Sheet>
-  )
-}
-
-export function Notes({ userId, isDemoMode }) {
-  const { notes, loading, addNote, deleteNote, shareNote, unshareNote } = useNotes({ userId, isDemoMode })
-  const [search, setSearch] = useState('')
-  const [activeTag, setActiveTag] = useState('all')
-  const [showAdd, setShowAdd] = useState(false)
-  const apiKey = localStorage.getItem('loco_groq_key') || ''
-
-  const filtered = useMemo(() => {
-    let list = notes
-    if (activeTag !== 'all') list = list.filter((n) => n.tag === activeTag)
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter(
-        (n) =>
-          n.title.toLowerCase().includes(q) ||
-          (n.body || '').toLowerCase().includes(q)
-      )
-    }
-    return list
-  }, [notes, activeTag, search])
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">Notes</h1>
-          <p className="text-sm text-muted-light dark:text-muted-dark mt-0.5">
-            {notes.length} note{notes.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <Button variant="primary" onClick={() => setShowAdd(true)}>
-          <Plus size={16} />
-          New Note
-        </Button>
-      </div>
-
-      {/* Search + tag filters */}
-      <div className="space-y-3">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search notes…"
+    <div className="animate-fade-in">
+      {/* Day header */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="flex items-center gap-2 w-full text-left mb-2 group"
+      >
+        <h2 className="text-sm font-bold font-serif text-text-light dark:text-text-dark">
+          {formatDayHeader(date)}
+        </h2>
+        <span className="text-xs text-muted-light dark:text-muted-dark">
+          {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+        </span>
+        <ChevronDown
+          size={14}
+          className={`text-muted-light dark:text-muted-dark transition-transform ${collapsed ? '-rotate-90' : ''}`}
         />
-        <div className="flex gap-2 flex-wrap">
-          {TAGS.map((t) => (
-            <button
-              key={t}
-              onClick={() => setActiveTag(t)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all duration-200 ${
-                activeTag === t
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-muted-light dark:text-muted-dark hover:border-primary hover:text-primary'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      </div>
+        {isToday && (
+          <span className="ml-auto text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+            LIVE
+          </span>
+        )}
+      </button>
 
-      {/* Notes grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-border-light dark:bg-border-dark rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <span className="text-5xl mb-4 block">📝</span>
-          <p className="text-muted-light dark:text-muted-dark font-medium">
-            {search ? 'No notes match your search.' : 'No notes yet. Create your first one!'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((note) => (
-            <NoteCard
-              key={note.id}
-              note={note}
-              onDelete={deleteNote}
-              onShare={shareNote}
-              onUnshare={unshareNote}
-              apiKey={apiKey}
+      {/* Entries */}
+      {!collapsed && (
+        <div className="ml-1 border-l-2 border-border-light dark:border-border-dark pl-4 space-y-0.5">
+          {entries.map(entry => (
+            <EntryLine
+              key={entry.id}
+              entry={entry}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))}
         </div>
       )}
+    </div>
+  )
+}
 
-      <AddNoteSheet open={showAdd} onClose={() => setShowAdd(false)} onAdd={addNote} />
+function CommandHelp({ show, onClose }) {
+  if (!show) return null
+  const commands = getAvailableCommands()
+
+  return (
+    <div className="card p-4 mb-4 animate-slide-up">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold font-serif text-text-light dark:text-text-dark">@ Commands</h3>
+        <button onClick={onClose} className="btn-icon"><X size={14} /></button>
+      </div>
+      <div className="space-y-2">
+        {commands.map(cmd => (
+          <div key={cmd.tag} className="flex items-start gap-3 text-xs">
+            <code className="text-primary font-mono font-bold bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">
+              {cmd.tag}
+            </code>
+            <div className="flex-1 min-w-0">
+              <p className="text-text-light dark:text-text-dark font-medium">{cmd.description}</p>
+              <p className="text-muted-light dark:text-muted-dark mt-0.5">
+                e.g. <span className="text-text-light dark:text-text-dark/70">{cmd.example}</span>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function Notes({ userId, isDemoMode }) {
+  const { groupedEntries, entries, loading, addEntry, editEntry, deleteEntry } = useNotes({ userId, isDemoMode })
+  const [input, setInput] = useState('')
+  const [showHelp, setShowHelp] = useState(false)
+  const [search, setSearch] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+  const inputRef = useRef(null)
+
+  // Detect tags while typing
+  const activeTags = useMemo(() => detectTags(input), [input])
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault()
+    if (!input.trim()) return
+    await addEntry(input.trim())
+    setInput('')
+    inputRef.current?.focus()
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
+  // Filter entries if searching
+  const displayGroups = useMemo(() => {
+    if (!search.trim()) return groupedEntries
+    const q = search.toLowerCase()
+    return groupedEntries
+      .map(group => ({
+        ...group,
+        entries: group.entries.filter(e =>
+          e.raw_text?.toLowerCase().includes(q) ||
+          e.parsed_type?.toLowerCase().includes(q)
+        ),
+      }))
+      .filter(group => group.entries.length > 0)
+  }, [groupedEntries, search])
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">
+            Journal
+          </h1>
+          <p className="text-sm text-muted-light dark:text-muted-dark mt-0.5">
+            {entries.length} {entries.length === 1 ? 'entry' : 'entries'} logged
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className={`btn-icon ${showSearch ? 'text-primary' : ''}`}
+            title="Search entries"
+          >
+            <Search size={18} />
+          </button>
+          <button
+            onClick={() => setShowHelp(!showHelp)}
+            className={`btn-icon ${showHelp ? 'text-primary' : ''}`}
+            title="Help with @ commands"
+          >
+            <HelpCircle size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* Search bar */}
+      {showSearch && (
+        <div className="relative animate-slide-up">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-light dark:text-muted-dark" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search entries..."
+            className="input pl-9 pr-8 text-sm"
+            autoFocus
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Command help */}
+      <CommandHelp show={showHelp} onClose={() => setShowHelp(false)} />
+
+      {/* Input area — always visible, no "create note" button needed */}
+      <form onSubmit={handleSubmit} className="relative">
+        <div className="card p-3">
+          {/* Tag detection chips */}
+          {activeTags.length > 0 && (
+            <div className="flex gap-2 mb-2 flex-wrap">
+              {activeTags.map(({ tag, type }) => {
+                const color = getTagColor(type)
+                return (
+                  <span
+                    key={tag}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${color.bg} ${color.text} animate-fade-in`}
+                  >
+                    {color.label}
+                  </span>
+                )
+              })}
+            </div>
+          )}
+
+          <div className="flex gap-2 items-end">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Write something... use @e for expenses, @h for health, @R for reminders"
+              rows={1}
+              className="flex-1 bg-transparent text-sm text-text-light dark:text-text-dark placeholder:text-muted-light dark:placeholder:text-muted-dark focus:outline-none resize-none"
+              style={{ minHeight: '36px', maxHeight: '120px' }}
+            />
+            <button
+              type="submit"
+              disabled={!input.trim()}
+              className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center disabled:opacity-30 hover:bg-primary-light transition-colors"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {/* Journal entries grouped by day */}
+      {loading ? (
+        <div className="space-y-6">
+          {[1, 2].map(i => (
+            <div key={i} className="space-y-2">
+              <div className="h-5 w-40 bg-border-light dark:bg-border-dark rounded animate-pulse" />
+              <div className="h-10 bg-border-light dark:bg-border-dark rounded-xl animate-pulse" />
+              <div className="h-10 bg-border-light dark:bg-border-dark rounded-xl animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : displayGroups.length === 0 ? (
+        <div className="text-center py-16">
+          <span className="text-5xl mb-4 block">📝</span>
+          <p className="text-muted-light dark:text-muted-dark font-medium">
+            {search ? 'No entries match your search.' : 'Start your journal! Just type and hit Enter.'}
+          </p>
+          <p className="text-xs text-muted-light dark:text-muted-dark mt-2">
+            Try: <code className="text-primary">coffee 80 @e</code> or <code className="text-primary">gym 45min @h</code>
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {displayGroups.map(group => (
+            <DayBlock
+              key={group.date}
+              date={group.date}
+              entries={group.entries}
+              onEdit={editEntry}
+              onDelete={deleteEntry}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

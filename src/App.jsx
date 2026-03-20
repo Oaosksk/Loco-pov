@@ -1,8 +1,6 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import { useNotes } from './hooks/useNotes'
-import { useGoals } from './hooks/useGoals'
 import { useDarkMode } from './hooks/useDarkMode'
 import { AuthScreen } from './components/AuthScreen'
 import { Layout } from './components/Layout'
@@ -11,6 +9,8 @@ import { Notes } from './pages/Notes'
 import { Goals } from './pages/Goals'
 import { Expenses } from './pages/Expenses'
 import { Health } from './pages/Health'
+import { AI } from './pages/AI'
+import { Settings } from './pages/Settings'
 
 function LoadingScreen() {
   return (
@@ -27,8 +27,6 @@ function LoadingScreen() {
 
 function AppInner({ user, session, isDemoMode, onSignOut }) {
   const { isDark, toggle: toggleDark } = useDarkMode()
-  const { notes } = useNotes({ userId: user?.id, isDemoMode })
-  const { goals } = useGoals({ userId: user?.id, isDemoMode })
 
   return (
     <BrowserRouter>
@@ -43,9 +41,11 @@ function AppInner({ user, session, isDemoMode, onSignOut }) {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/notes" element={<Notes userId={user?.id} isDemoMode={isDemoMode} />} />
-          <Route path="/expenses" element={<Expenses />} />
           <Route path="/goals" element={<Goals userId={user?.id} isDemoMode={isDemoMode} />} />
+          <Route path="/expenses" element={<Expenses />} />
           <Route path="/health" element={<Health />} />
+          <Route path="/ai" element={<AI user={user} notes={[]} goals={[]} />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Layout>
