@@ -270,10 +270,6 @@ export function Notes({ userId, isDemoMode }) {
               </div>
             )}
           </div>
-          <Button variant="primary" onClick={() => setShowAddNote(true)}>
-            <Plus size={16} />
-            Add Note
-          </Button>
         </div>
       </div>
 
@@ -414,6 +410,15 @@ export function Notes({ userId, isDemoMode }) {
       )}
 
       <AddNoteSheet open={showAddNote} onClose={() => setShowAddNote(false)} onAdd={handleAddNote} />
+
+      {/* Floating Add Button */}
+      <button
+        onClick={() => setShowAddNote(true)}
+        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-primary hover:bg-primary-light text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-20"
+        title="Add Note"
+      >
+        <Plus size={24} strokeWidth={3} />
+      </button>
     </div>
   )
 }
