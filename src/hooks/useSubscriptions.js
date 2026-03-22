@@ -43,7 +43,7 @@ export function useSubscriptions({ userId, isDemoMode } = {}) {
       if (fetchErr) throw fetchErr
 
       setSubscriptions(data || [])
-      localStorage.setItem(LS_CACHE, JSON.stringify(data || []))
+      if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
     } catch (err) {
       console.error('[Subscriptions] Fetch error:', err.message)
       const cached = localStorage.getItem(LS_CACHE)

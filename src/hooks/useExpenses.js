@@ -49,7 +49,7 @@ export function useExpenses({ userId, isDemoMode } = {}) {
       if (fetchErr) throw fetchErr
 
       setExpenses(data || [])
-      localStorage.setItem(LS_CACHE, JSON.stringify(data || []))
+      if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
     } catch (err) {
       console.error('[Expenses] Fetch error:', err.message)
       const cached = localStorage.getItem(LS_CACHE)

@@ -13,15 +13,15 @@ import 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 
 const CATEGORY_COLORS = {
-  transport: 'bg-blue-500/20 text-blue-400',
-  food: 'bg-orange-500/20 text-orange-400',
-  shopping: 'bg-pink-500/20 text-pink-400',
-  entertainment: 'bg-purple-500/20 text-purple-400',
-  health: 'bg-red-500/20 text-red-400',
-  bills: 'bg-yellow-500/20 text-yellow-400',
-  education: 'bg-cyan-500/20 text-cyan-400',
-  personal: 'bg-green-500/20 text-green-400',
-  other: 'bg-gray-500/20 text-gray-400',
+  transport:     'border-border-dark text-muted-dark',
+  food:          'border-border-dark text-muted-dark',
+  shopping:      'border-border-dark text-muted-dark',
+  entertainment: 'border-border-dark text-muted-dark',
+  health:        'border-border-dark text-muted-dark',
+  bills:         'border-border-dark text-muted-dark',
+  education:     'border-border-dark text-muted-dark',
+  personal:      'border-border-dark text-muted-dark',
+  other:         'border-border-dark text-muted-dark',
 }
 
 const CATEGORY_EMOJIS = {

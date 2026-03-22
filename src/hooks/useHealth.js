@@ -51,7 +51,7 @@ export function useHealth({ userId, isDemoMode } = {}) {
       if (fetchErr) throw fetchErr
 
       setLogs(data || [])
-      localStorage.setItem(LS_CACHE, JSON.stringify(data || []))
+      if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
     } catch (err) {
       console.error('[Health] Fetch error:', err.message)
       const cached = localStorage.getItem(LS_CACHE)

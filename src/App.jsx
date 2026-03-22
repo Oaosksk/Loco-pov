@@ -12,22 +12,24 @@ import { Health } from './pages/Health'
 import { AI } from './pages/AI'
 import { Settings } from './pages/Settings'
 
+// ── Loading screen ────────────────────────────────────
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4 animate-pulse">
-          <span className="text-white text-xl font-bold font-serif">L</span>
-        </div>
-        <p className="text-muted-light dark:text-muted-dark text-sm font-medium">Loading Loco…</p>
+    <div style={{ minHeight: '100svh', background: '#0D1117', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div style={{ textAlign: 'center' }}>
+        <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '2rem', fontWeight: 700, color: '#E6EDF3', display: 'block', marginBottom: '0.5rem' }}>
+          Loco
+        </span>
+        <p style={{ color: '#8B949E', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+          Loading…
+        </p>
       </div>
     </div>
   )
 }
 
-function AppInner({ user, session, isDemoMode, onSignOut }) {
-  const { isDark, toggle: toggleDark } = useDarkMode()
-
+// ── Main app with layout ─────────────────────────────
+function AppInner({ user, isDemoMode, onSignOut, isDark, toggleDark }) {
   return (
     <BrowserRouter>
       <Layout
@@ -38,24 +40,26 @@ function AppInner({ user, session, isDemoMode, onSignOut }) {
         isDemoMode={isDemoMode}
       >
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/"          element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/notes" element={<Notes userId={user?.id} isDemoMode={isDemoMode} />} />
-          <Route path="/goals" element={<Goals userId={user?.id} isDemoMode={isDemoMode} />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/health" element={<Health />} />
-          <Route path="/ai" element={<AI user={user} notes={[]} goals={[]} />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/notes"     element={<Notes userId={user?.id} isDemoMode={isDemoMode} />} />
+          <Route path="/goals"     element={<Goals userId={user?.id} isDemoMode={isDemoMode} />} />
+          <Route path="/expenses"  element={<Expenses />} />
+          <Route path="/health"    element={<Health />} />
+          <Route path="/ai"        element={<AI user={user} notes={[]} goals={[]} />} />
+          <Route path="/settings"  element={<Settings />} />
+          <Route path="*"          element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Layout>
     </BrowserRouter>
   )
 }
 
+// ── App root — useDarkMode lives HERE so it applies everywhere ──
 export default function App() {
+  // dark mode MUST be at root so AuthScreen & LoadingScreen get dark bg too
+  const { isDark, toggle: toggleDark } = useDarkMode()
   const { user, session, loading, isDemoMode, signInWithGoogle, signOut, enterDemoMode } = useAuth()
-  const { isDark } = useDarkMode()
 
   if (loading) return <LoadingScreen />
 
@@ -75,6 +79,8 @@ export default function App() {
       session={session}
       isDemoMode={isDemoMode}
       onSignOut={signOut}
+      isDark={isDark}
+      toggleDark={toggleDark}
     />
   )
 }

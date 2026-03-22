@@ -109,7 +109,7 @@ export function useNotes({ userId, isDemoMode }) {
     }
 
     try {
-      // Fetch note_entries from Supabase (joined with notes)
+      // Fetch note_entries from Supabase
       const { data, error: fetchErr } = await supabase
         .from('note_entries')
         .select('*')
@@ -118,8 +118,11 @@ export function useNotes({ userId, isDemoMode }) {
 
       if (fetchErr) throw fetchErr
 
-      setEntries(data || [])
-      localStorage.setItem(LS_CACHE_KEY, JSON.stringify(data || []))
+      // Only update cache when we actually get data back
+      if (data && data.length >= 0) {
+        setEntries(data)
+        localStorage.setItem(LS_CACHE_KEY, JSON.stringify(data))
+      }
     } catch (err) {
       console.error('[Notes] Fetch error:', err.message)
       const cached = localStorage.getItem(LS_CACHE_KEY)
@@ -186,7 +189,6 @@ export function useNotes({ userId, isDemoMode }) {
           note_id: noteId,
           user_id: userId,
           note_date: today,
-          title: title || '',
           raw_text: rawText.trim(),
           parsed_type: parsed.type,
           parsed_data: parsed.data,
@@ -230,7 +232,6 @@ export function useNotes({ userId, isDemoMode }) {
       const { error } = await supabase
         .from('note_entries')
         .update({
-          title: newTitle || '',
           raw_text: newRawText.trim(),
           parsed_type: parsed.type,
           parsed_data: parsed.data,
@@ -379,15 +380,35 @@ async function routeParsedData(parsed, entryId, userId) {
         break
       }
       case 'goal': {
-        const { title } = parsed.data
-        await supabase.from('goals').insert({
-          user_id: userId,
-          title,
-          progress: 0,
-          target: 100,
-          unit: '%',
-          status: 'active',
-        })
+        const { title, tasks = [], target = 100 } = parsed.data
+        const resolvedTarget = tasks.length > 0 ? tasks.length : target
+        const resolvedUnit = tasks.length > 0 ? 'tasks' : '%'
+
+        const { data: goalData, error: goalErr } = await supabase
+          .from('goals')
+          .insert({
+            user_id: userId,
+            title,
+            progress: 0,
+            target: resolvedTarget,
+            unit: resolvedUnit,
+            status: 'active',
+          })
+          .select()
+          .single()
+
+        if (goalErr) throw goalErr
+
+        if (tasks.length > 0 && goalData?.id) {
+          const taskRows = tasks.map((t, i) => ({
+            goal_id: goalData.id,
+            user_id: userId,
+            title: t.title,
+            done: false,
+            sort_order: t.sort_order ?? i + 1,
+          }))
+          await supabase.from('goal_tasks').insert(taskRows)
+        }
         break
       }
       default:

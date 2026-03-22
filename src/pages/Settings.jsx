@@ -1,28 +1,21 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/Button'
-import {
-  Key, Wallet, Brain, Bell, Shield, Info,
-  Check, Eye, EyeOff, Moon, Sun, Smartphone,
-} from 'lucide-react'
+import { Key, Wallet, Brain, Bell, Info, Eye, EyeOff, Check } from 'lucide-react'
 
-const LS_GROQ_KEY = 'loco_groq_key'
-const LS_BUDGET = 'loco_monthly_budget'
-const LS_FUZZY = 'loco_fuzzy_ai'
-const LS_REMIND_DAYS = 'loco_remind_days'
+const LS_GROQ_KEY  = 'loco_groq_key'
+const LS_BUDGET    = 'loco_monthly_budget'
+const LS_FUZZY     = 'loco_fuzzy_ai'
+const LS_REMIND    = 'loco_remind_days'
 
-function SettingSection({ icon: Icon, title, description, children }) {
+function Section({ icon: Icon, title, desc, children }) {
   return (
-    <div className="card p-5">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <Icon size={18} className="text-primary" />
-        </div>
+    <div className="card p-5 space-y-4">
+      <div className="flex items-start gap-3">
+        <Icon size={15} className="text-muted-light dark:text-muted-dark mt-0.5 flex-shrink-0" />
         <div>
-          <h3 className="font-bold font-serif text-text-light dark:text-text-dark text-sm">{title}</h3>
-          {description && (
-            <p className="text-xs text-muted-light dark:text-muted-dark mt-0.5">{description}</p>
-          )}
+          <h3 className="text-sm font-serif font-bold text-text-light dark:text-text-dark">{title}</h3>
+          {desc && <p className="text-[11px] text-muted-light dark:text-muted-dark mt-0.5">{desc}</p>}
         </div>
       </div>
       {children}
@@ -34,15 +27,20 @@ function Toggle({ checked, onChange, label }) {
   return (
     <label className="flex items-center justify-between gap-3 cursor-pointer">
       <span className="text-sm text-text-light dark:text-text-dark">{label}</span>
-      <div className="relative">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          className="sr-only peer"
+      <button
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative w-10 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${
+          checked ? 'bg-text-dark' : 'bg-border-dark'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-bg-dark transition-transform duration-200 ${
+            checked ? 'translate-x-5' : 'translate-x-0'
+          }`}
         />
-        <div className="w-11 h-6 bg-border-light dark:bg-border-dark rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-      </div>
+      </button>
     </label>
   )
 }
@@ -50,185 +48,123 @@ function Toggle({ checked, onChange, label }) {
 export function Settings() {
   const { user } = useAuth()
 
-  // Groq API key
-  const [groqKey, setGroqKey] = useState(() => localStorage.getItem(LS_GROQ_KEY) || '')
-  const [showKey, setShowKey] = useState(false)
-  const [keySaved, setKeySaved] = useState(false)
+  const [groqKey,   setGroqKey]   = useState(() => localStorage.getItem(LS_GROQ_KEY) || '')
+  const [showKey,   setShowKey]   = useState(false)
+  const [keySaved,  setKeySaved]  = useState(false)
+  const [budget,    setBudget]    = useState(() => localStorage.getItem(LS_BUDGET) || '')
+  const [fuzzyAI,   setFuzzyAI]   = useState(() => localStorage.getItem(LS_FUZZY) === 'true')
+  const [remindDays,setRemindDays]= useState(() => localStorage.getItem(LS_REMIND) || '3')
 
-  // Budget
-  const [budget, setBudget] = useState(() => localStorage.getItem(LS_BUDGET) || '')
-
-  // Fuzzy AI toggle
-  const [fuzzyAI, setFuzzyAI] = useState(() => localStorage.getItem(LS_FUZZY) === 'true')
-
-  // Subscription remind days
-  const [remindDays, setRemindDays] = useState(() => localStorage.getItem(LS_REMIND_DAYS) || '3')
-
-  // Save handlers
-  const saveGroqKey = () => {
+  const saveKey = () => {
     localStorage.setItem(LS_GROQ_KEY, groqKey.trim())
     setKeySaved(true)
     setTimeout(() => setKeySaved(false), 2000)
   }
 
-  const saveBudget = (val) => {
-    setBudget(val)
-    localStorage.setItem(LS_BUDGET, val)
-  }
+  const saveBudget = v => { setBudget(v); localStorage.setItem(LS_BUDGET, v) }
+  const saveFuzzy  = v => { setFuzzyAI(v); localStorage.setItem(LS_FUZZY, String(v)) }
+  const saveRemind = v => { setRemindDays(v); localStorage.setItem(LS_REMIND, v) }
 
-  const saveFuzzyAI = (val) => {
-    setFuzzyAI(val)
-    localStorage.setItem(LS_FUZZY, String(val))
-  }
-
-  const saveRemindDays = (val) => {
-    setRemindDays(val)
-    localStorage.setItem(LS_REMIND_DAYS, val)
-  }
+  const name   = user?.user_metadata?.full_name || 'User'
+  const email  = user?.email || 'demo@loco.app'
+  const avatar = user?.user_metadata?.avatar_url
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-4">
+
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">Settings</h1>
-        <p className="text-sm text-muted-light dark:text-muted-dark mt-0.5">
-          Configure your Loco experience
-        </p>
+        <h1 className="text-2xl font-serif font-bold text-text-light dark:text-text-dark">Settings</h1>
+        <p className="text-xs text-muted-light dark:text-muted-dark mt-0.5">Loco v1.0.0</p>
       </div>
 
       {/* Profile */}
-      <div className="card p-5">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center overflow-hidden flex-shrink-0">
-            {user?.user_metadata?.avatar_url ? (
-              <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-white text-xl font-bold">
-                {(user?.user_metadata?.full_name || user?.email || 'U')[0].toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div>
-            <p className="font-bold font-serif text-text-light dark:text-text-dark">
-              {user?.user_metadata?.full_name || 'User'}
-            </p>
-            <p className="text-xs text-muted-light dark:text-muted-dark">{user?.email || 'demo@loco.app'}</p>
-          </div>
+      <div className="card p-4 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-border-dark flex items-center justify-center overflow-hidden flex-shrink-0">
+          {avatar
+            ? <img src={avatar} alt={name} className="w-full h-full object-cover" />
+            : <span className="text-text-dark text-lg font-serif">{name[0]}</span>}
+        </div>
+        <div>
+          <p className="text-sm font-serif font-bold text-text-light dark:text-text-dark">{name}</p>
+          <p className="text-[11px] text-muted-light dark:text-muted-dark">{email}</p>
         </div>
       </div>
 
       {/* Groq API Key */}
-      <SettingSection
-        icon={Key}
-        title="Groq API Key"
-        description="Powers the AI assistant. Free at console.groq.com"
-      >
+      <Section icon={Key} title="Groq API Key" desc="Powers AI. Free at console.groq.com">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <input
               type={showKey ? 'text' : 'password'}
               value={groqKey}
-              onChange={(e) => setGroqKey(e.target.value)}
-              placeholder="gsk_..."
-              className="input pr-10 font-mono text-xs"
+              onChange={e => setGroqKey(e.target.value)}
+              placeholder="gsk_…"
+              className="input pr-9 font-mono text-xs"
             />
             <button
               onClick={() => setShowKey(!showKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 btn-icon w-5 h-5"
             >
-              {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+              {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
             </button>
           </div>
-          <Button variant="primary" onClick={saveGroqKey} disabled={!groqKey.trim()}>
+          <Button variant="primary" onClick={saveKey} disabled={!groqKey.trim()} className="px-4">
             {keySaved ? <Check size={14} /> : 'Save'}
           </Button>
         </div>
-        <p className="text-[10px] text-muted-light dark:text-muted-dark mt-2">
-          🔒 Stored in <code>localStorage</code> only. Never sent to Loco servers.
+        <p className="text-[10px] text-muted-light dark:text-muted-dark">
+          Stored in <code className="bg-border-dark px-1 rounded">localStorage</code> only. Never leaves your device.
         </p>
-      </SettingSection>
+      </Section>
 
       {/* Budget */}
-      <SettingSection
-        icon={Wallet}
-        title="Monthly Budget"
-        description="Set a monthly budget to get alerts at 80%"
-      >
+      <Section icon={Wallet} title="Monthly Budget" desc="Get alerted at 80% spend">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-text-light dark:text-text-dark">₹</span>
+          <span className="text-sm font-serif font-bold text-text-light dark:text-text-dark">₹</span>
           <input
-            type="number"
-            min="0"
+            type="number" min="0"
             value={budget}
-            onChange={(e) => saveBudget(e.target.value)}
-            placeholder="e.g., 15000"
+            onChange={e => saveBudget(e.target.value)}
+            placeholder="e.g. 15000"
             className="input flex-1"
           />
         </div>
         {budget && Number(budget) > 0 && (
-          <p className="text-xs text-muted-light dark:text-muted-dark mt-2">
-            You'll be notified when expenses reach ₹{Math.round(Number(budget) * 0.8).toLocaleString('en-IN')} (80%)
+          <p className="text-[10px] text-muted-light dark:text-muted-dark">
+            Alert at ₹{Math.round(Number(budget)*0.8).toLocaleString('en-IN')}
           </p>
         )}
-      </SettingSection>
+      </Section>
 
-      {/* AI Settings */}
-      <SettingSection
-        icon={Brain}
-        title="AI Detection"
-        description="Fuzzy AI auto-classifies entries without @ tags"
-      >
-        <Toggle
-          label="Enable fuzzy AI detection"
-          checked={fuzzyAI}
-          onChange={saveFuzzyAI}
-        />
-        <p className="text-[10px] text-muted-light dark:text-muted-dark mt-2">
-          When enabled, lines like "petrol 159" will auto-detect as expenses even without <code className="text-primary">@e</code>.
-          Uses Groq API calls.
+      {/* AI */}
+      <Section icon={Brain} title="Fuzzy AI Detection" desc="Auto-classify entries without @ tags">
+        <Toggle label="Enable fuzzy AI" checked={fuzzyAI} onChange={saveFuzzy} />
+        <p className="text-[10px] text-muted-light dark:text-muted-dark">
+          Lines like "petrol 159" get auto-detected as expenses. Uses Groq API.
         </p>
-      </SettingSection>
+      </Section>
 
       {/* Notifications */}
-      <SettingSection
-        icon={Bell}
-        title="Notifications"
-        description="Push notification preferences"
-      >
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-text-light dark:text-text-dark">Remind before renewal</span>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="0"
-                max="30"
-                value={remindDays}
-                onChange={(e) => saveRemindDays(e.target.value)}
-                className="input w-16 text-center py-1 text-sm"
-              />
-              <span className="text-xs text-muted-light dark:text-muted-dark">days</span>
-            </div>
-          </div>
+      <Section icon={Bell} title="Renewal Reminders" desc="Days before subscription renews">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-text-light dark:text-text-dark flex-1">Remind before</span>
+          <input
+            type="number" min="0" max="30"
+            value={remindDays}
+            onChange={e => saveRemind(e.target.value)}
+            className="input w-16 text-center"
+          />
+          <span className="text-xs text-muted-light dark:text-muted-dark">days</span>
         </div>
-      </SettingSection>
+      </Section>
 
       {/* About */}
-      <SettingSection
-        icon={Info}
-        title="About Loco"
-        description="v1.0.0 — Personal life tracker"
-      >
-        <div className="space-y-2 text-xs text-muted-light dark:text-muted-dark">
-          <p>Built with React 19, Vite, Tailwind CSS, Supabase, and Groq AI.</p>
-          <p>100% free tier — no paid APIs.</p>
-          <p>Currency: INR (₹)</p>
-          <div className="flex items-center gap-2 pt-2">
-            <Smartphone size={14} />
-            <span>PWA — installable on any device</span>
-          </div>
+      <Section icon={Info} title="About" desc="Loco v1.0.0 — Smart Life Journal">
+        <div className="space-y-1 text-xs text-muted-light dark:text-muted-dark leading-relaxed">
+          <p>React 19 · Vite · Tailwind CSS · Supabase · Groq AI</p>
+          <p>Currency: INR (₹) · All free tier · Offline-first PWA</p>
         </div>
-      </SettingSection>
+      </Section>
     </div>
   )
 }

@@ -30,18 +30,19 @@ export function Sheet({ open, onClose, title, children }) {
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" />
 
       {/* Panel */}
-      <div className="relative z-10 w-full sm:max-w-lg bg-surface-light dark:bg-surface-dark
-                      rounded-t-3xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 animate-slide-up
-                      max-h-[92svh] overflow-y-auto">
+      <div className="relative z-10 w-full sm:max-w-lg
+                      bg-surface-light dark:bg-surface-dark
+                      border-t border-border-light dark:border-border-dark
+                      sm:border sm:rounded-2xl
+                      rounded-t-3xl shadow-card-dark
+                      p-5 sm:p-6 animate-slide-up max-h-[92svh] overflow-y-auto"
+           style={{ borderWidth: '0.5px' }}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-text-light dark:text-text-dark font-serif">
+          <h2 className="text-base font-serif font-bold text-text-light dark:text-text-dark">
             {title}
           </h2>
-          <button
-            onClick={onClose}
-            className="btn-icon -mr-1"
-          >
-            <X size={18} />
+          <button onClick={onClose} className="btn-icon -mr-1">
+            <X size={16} />
           </button>
         </div>
         {children}

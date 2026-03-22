@@ -251,6 +251,66 @@ function cleanDescription(text) {
 }
 
 // ═══════════════════════════════════════════
+// Goal entry parser — numbered list support
+// ═══════════════════════════════════════════
+/**
+ * Parses goal text into a task-list goal.
+ *
+ * Supports two formats:
+ *   Multi-line:  "1. Go to PG\n2. Complete Running"
+ *   Inline list: "1. Go to PG 2. Complete Running"
+ *   Single line: "Learn guitar"  →  one task with same title as goal
+ *
+ * Returns: { type, raw, data: { title, tasks[], progress, target } }
+ */
+function parseGoalEntry(textWithoutTag, raw) {
+  // Normalise newlines so we can split uniformly
+  const normalised = textWithoutTag.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+
+  // Regex: matches "1.", "2.", "10." at the start of a word boundary
+  const numberedItemRegex = /(?:^|\n)\s*\d+\.\s+/g
+
+  const hasNumberedList = numberedItemRegex.test(normalised)
+
+  let tasks = []
+
+  if (hasNumberedList) {
+    // Split on "N. " markers — handles both newline & inline variants
+    // e.g. "1. task one 2. task two" → ["task one", "task two"]
+    const parts = normalised
+      .split(/\n?\s*\d+\.\s+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+
+    tasks = parts.map((title, idx) => ({
+      title: title.charAt(0).toUpperCase() + title.slice(1),
+      done: false,
+      sort_order: idx + 1,
+    }))
+  } else {
+    // Single-line goal → one task, goal title = task title
+    const title = textWithoutTag.trim().charAt(0).toUpperCase() + textWithoutTag.trim().slice(1) || 'New Goal'
+    tasks = [{ title, done: false, sort_order: 1 }]
+  }
+
+  // Goal title = first task title (or the whole text if single)
+  const goalTitle = tasks.length === 1
+    ? tasks[0].title
+    : tasks[0].title  // leading task as the goal name
+
+  return {
+    type: 'goal',
+    raw,
+    data: {
+      title: goalTitle,
+      tasks,
+      progress: 0,
+      target: tasks.length,
+    },
+  }
+}
+
+// ═══════════════════════════════════════════
 // Main parser
 // ═══════════════════════════════════════════
 /**
@@ -378,13 +438,7 @@ export function parseEntry(text) {
 
   // ─── Goal ───
   if (detectedType === 'goal') {
-    return {
-      type: 'goal',
-      raw,
-      data: {
-        title: textWithoutTag.charAt(0).toUpperCase() + textWithoutTag.slice(1) || 'New Goal',
-      },
-    }
+    return parseGoalEntry(textWithoutTag, raw)
   }
 
   // ─── Upload ───

@@ -6,13 +6,13 @@ import { Sheet } from '../components/ui/Sheet'
 import { Plus, Trash2, Flame, TrendingUp, Activity, Heart, Droplets, Moon, Footprints, Brain, Scale } from 'lucide-react'
 
 const METRIC_CONFIG = {
-  workout: { icon: Activity, color: 'text-green-400', bg: 'bg-green-500/20', emoji: '🏋️' },
-  weight: { icon: Scale, color: 'text-blue-400', bg: 'bg-blue-500/20', emoji: '⚖️' },
-  sleep: { icon: Moon, color: 'text-indigo-400', bg: 'bg-indigo-500/20', emoji: '🌙' },
-  steps: { icon: Footprints, color: 'text-orange-400', bg: 'bg-orange-500/20', emoji: '👣' },
-  water: { icon: Droplets, color: 'text-cyan-400', bg: 'bg-cyan-500/20', emoji: '💧' },
-  mood: { icon: Brain, color: 'text-pink-400', bg: 'bg-pink-500/20', emoji: '😊' },
-  custom: { icon: Heart, color: 'text-red-400', bg: 'bg-red-500/20', emoji: '❤️' },
+  workout: { icon: Activity, color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '🏋️' },
+  weight:  { icon: Scale,    color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '⚖️' },
+  sleep:   { icon: Moon,     color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '🌙' },
+  steps:   { icon: Footprints,color:'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '👣' },
+  water:   { icon: Droplets, color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '💧' },
+  mood:    { icon: Brain,    color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '😊' },
+  custom:  { icon: Heart,    color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '❤️' },
 }
 
 function formatDayHeader(dateStr) {
@@ -37,7 +37,7 @@ function StreakCard({ metric, streak }) {
   )
 }
 
-function MiniChart({ data, color = 'bg-primary' }) {
+function MiniChart({ data }) {
   if (!data || data.length === 0) return null
   const max = Math.max(...data.map(d => d.value), 1)
   
@@ -46,7 +46,7 @@ function MiniChart({ data, color = 'bg-primary' }) {
       {data.map((d, i) => (
         <div key={i} className="flex-1 flex flex-col items-center gap-1">
           <div
-            className={`w-full rounded-t ${color} transition-all duration-500 min-h-[2px]`}
+            className="w-full rounded-t bg-muted-light dark:bg-muted-dark transition-all duration-500 min-h-[2px]"
             style={{ height: `${Math.max((d.value / max) * 100, 4)}%` }}
           />
           <span className="text-[8px] text-muted-light dark:text-muted-dark">{d.label}</span>
