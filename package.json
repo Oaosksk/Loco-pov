@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.1",
+    "bcrypt": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "lucide-react": "^0.577.0",

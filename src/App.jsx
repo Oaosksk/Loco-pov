@@ -59,7 +59,7 @@ function AppInner({ user, isDemoMode, onSignOut, isDark, toggleDark }) {
 export default function App() {
   // dark mode MUST be at root so AuthScreen & LoadingScreen get dark bg too
   const { isDark, toggle: toggleDark } = useDarkMode()
-  const { user, session, loading, isDemoMode, signInWithGoogle, signOut, enterDemoMode } = useAuth()
+  const { user, session, loading, isDemoMode, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth()
 
   if (loading) return <LoadingScreen />
 
@@ -67,7 +67,8 @@ export default function App() {
     return (
       <AuthScreen
         onSignIn={signInWithGoogle}
-        onDemoMode={enterDemoMode}
+        onEmailSignIn={signInWithEmail}
+        onEmailSignUp={signUpWithEmail}
         loading={false}
       />
     )
