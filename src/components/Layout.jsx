@@ -1,28 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import {
-  LayoutDashboard, BookOpen, Target, Wallet,
-  Heart, Brain, Settings, LogOut, MoreVertical,
-} from 'lucide-react'
+import {LayoutDashboard, BookOpen, Target, Wallet, Heart, Brain, Settings, LogOut, MoreVertical, HardDrive} from 'lucide-react'
 
 const MAIN_NAV = [
-  { to: '/dashboard', label: 'Home',  icon: LayoutDashboard },
-  { to: '/notes',     label: 'Notes', icon: BookOpen         },
-  { to: '/goals',     label: 'Goals', icon: Target           },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard},
+  { to: '/notes', label: 'Notes', icon: BookOpen},
+  { to: '/goals', label: 'Goals', icon: Target},
+  { to: '/expenses', label: 'Expenses', icon: Wallet},
 ]
 
 const MORE_NAV = [
-  { to: '/expenses', label: 'Expenses', icon: Wallet  },
-  { to: '/health',   label: 'Health',   icon: Heart   },
-  { to: '/ai',       label: 'AI',       icon: Brain   },
+  // { to: '/expenses', label: 'Expenses', icon: Wallet  },
+  { to: '/drive', label: 'Drive', icon: HardDrive},
+  { to: '/health', label: 'Health', icon: Heart},
+  { to: '/ai', label: 'AI', icon: Brain},
   { to: '/settings', label: 'Settings', icon: Settings},
 ]
 
-const BG      = '#0D1117'
+const BG = '#0D1117'
 const SURFACE = '#161B22'
-const BORDER  = '#21262D'
-const TEXT    = '#E6EDF3'
-const MUTED   = '#8B949E'
+const BORDER = '#21262D'
+const TEXT = '#E6EDF3'
+const MUTED = '#8B949E'
 
 function Avatar({ user }) {
   const src  = user?.user_metadata?.avatar_url
@@ -45,8 +44,18 @@ function Avatar({ user }) {
 
 export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
   const [moreOpen, setMoreOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const moreRef = useRef(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+    const updateState = () => setIsMobile(mediaQuery.matches)
+
+    updateState()
+    mediaQuery.addEventListener('change', updateState)
+    return () => mediaQuery.removeEventListener('change', updateState)
+  }, [])
 
   useEffect(() => {
     const handler = e => {
@@ -66,6 +75,9 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
         background: `${SURFACE}cc`, backdropFilter: 'blur(12px)',
         borderBottom: `0.5px solid ${BORDER}`,
       }}>
+        <img src="/icons/icon-512.png" alt="Logo" 
+        style={ { width: 24, height: 24, borderRadius: 6 } }
+        />
         <span style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: '1.1rem', fontWeight: 700, color: TEXT,
@@ -88,12 +100,12 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
       {/* ── Bottom nav ───────────────────────────────────── */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30, padding: '0 16px 20px' }}>
         <div style={{
-          maxWidth: 380, margin: '0 auto',
+          width: '100%', maxWidth: 480, margin: '0 auto',
           background: SURFACE,
           border: `0.5px solid ${BORDER}`,
           borderRadius: 16,
-          display: 'flex', alignItems: 'center',
-          padding: '6px 8px', gap: 4,
+          display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'space-around' : 'flex-start',
+          padding: '6px 8px', gap: isMobile ? 0 : 4,
         }}>
 
           {MAIN_NAV.map(({ to, label, icon: Icon }) => (
@@ -101,7 +113,8 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
               key={to}
               to={to}
               style={({ isActive }) => ({
-                display: 'flex', alignItems: 'center', gap: 6,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 0 : 6,
+                flex: isMobile ? 1 : 'none',
                 padding: '8px 12px', borderRadius: 10,
                 fontSize: '0.875rem', fontWeight: 500, fontFamily: "'DM Sans', sans-serif",
                 textDecoration: 'none', flexShrink: 0, transition: 'all 0.15s',
@@ -112,7 +125,7 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
               {({ isActive }) => (
                 <>
                   <Icon size={16} strokeWidth={isActive ? 2.2 : 1.8} />
-                  <span>{label}</span>
+                  {!isMobile && <span>{label}</span>}
                 </>
               )}
             </NavLink>
@@ -167,3 +180,12 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+

@@ -309,7 +309,7 @@ export function Expenses() {
           onClick={() => setActiveTab('expenses')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
             activeTab === 'expenses'
-              ? 'bg-primary text-white'
+              ? 'bg-primary text-black'
               : 'bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-muted-light dark:text-muted-dark'
           }`}
         >
@@ -319,7 +319,7 @@ export function Expenses() {
           onClick={() => setActiveTab('subscriptions')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
             activeTab === 'subscriptions'
-              ? 'bg-primary text-white'
+              ? 'bg-primary text-black'
               : 'bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-muted-light dark:text-muted-dark'
           }`}
         >
@@ -338,7 +338,7 @@ export function Expenses() {
                 onClick={() => setFilter(f)}
                 className={`px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all ${
                   filter === f
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-black'
                     : 'bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-muted-light dark:text-muted-dark hover:border-primary'
                 }`}
               >

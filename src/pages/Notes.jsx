@@ -147,11 +147,21 @@ function AddNoteSheet({ open, onClose, onAdd }) {
           </div>
         )}
         <div>
+            <h3 className="block text-xs font-medium text-muted-light dark:text-muted-dark mb-1.5">
+              Title
+            </h3>
+            <textarea name="title" 
+            id="title-card" 
+            autoFocus required
+            placeholder="Title" className="input" 
+            rows={1}/>
+        </div>
+        <div>
           <label className="block text-xs font-medium text-muted-light dark:text-muted-dark mb-1.5">
             Entry *
           </label>
           <textarea
-            autoFocus required
+            // autoFocus required
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder={"petrol 159 @e\ngym 45min @h\ncall mum @R 9pm"}
@@ -385,7 +395,7 @@ export function Notes({ userId, isDemoMode }) {
       {/* FAB */}
       <button
         onClick={() => setShowAdd(true)}
-        className="fixed bottom-24 right-5 w-12 h-12 rounded-2xl
+        className="fixed bottom-24 right-7 w-12 h-12 rounded-2xl
                    bg-text-light dark:bg-text-dark
                    text-bg-light dark:text-bg-dark
                    shadow-card-dark hover:opacity-80

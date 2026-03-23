@@ -5,14 +5,14 @@ import { useSubscriptions } from '../hooks/useSubscriptions'
 import { useReminders } from '../hooks/useReminders'
 import { useGoals } from '../hooks/useGoals'
 import { useHealth } from '../hooks/useHealth'
-import {
-  Wallet, Target, Flame, CreditCard,
-  Bell, RefreshCw, Sparkles, AlertCircle, Trash2,
-} from 'lucide-react'
+import { Wallet, Target, Flame, CreditCard, Bell, RefreshCw, Sparkles, AlertCircle, Trash2, } from 'lucide-react'
 import { chat } from '../lib/groq'
+// import { useNavigate } from 'react-router-dom'
+
 
 /* ── Stat card ──────────────────────────────────────── */
 function StatCard({ icon: Icon, title, value, subtitle, warning }) {
+
   return (
     <div className="card p-4 space-y-3">
       <div className="flex items-center justify-between">
