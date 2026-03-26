@@ -152,7 +152,7 @@ function AddNoteSheet({ open, onClose, onAdd }) {
             </h3>
             <textarea name="title" 
             id="title-card" 
-            autoFocus required
+            autoFocus
             placeholder="Title" className="input" 
             rows={1}/>
         </div>
