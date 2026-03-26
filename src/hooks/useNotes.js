@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { parseEntry } from '../lib/parseEntry'
 
 const LS_BUFFER_KEY = 'loco_notes_buffer'   // offline buffer
-const LS_CACHE_KEY  = 'loco_entries_cache'  // cached entries for display
+// const LS_CACHE_KEY  = 'loco_entries_cache'  // cached entries for display
 
 function getTodayDate() {
   return new Date().toISOString().split('T')[0]
@@ -44,10 +44,11 @@ export function useNotes({ userId, isDemoMode }) {
     setError(null)
 
     if (isDemoMode) {
-      const cached = localStorage.getItem(LS_CACHE_KEY)
-      if (cached) {
-        setEntries(JSON.parse(cached))
-      } else {
+      // const cached = localStorage.getItem(LS_CACHE_KEY)
+      // if (cached) {
+        // setEntries(JSON.parse(cached))
+      // } else 
+        {
         // Seed demo entries
         const demoEntries = [
           {
@@ -102,7 +103,7 @@ export function useNotes({ userId, isDemoMode }) {
           },
         ]
         setEntries(demoEntries)
-        localStorage.setItem(LS_CACHE_KEY, JSON.stringify(demoEntries))
+        // localStorage.setItem(LS_CACHE_KEY, JSON.stringify(demoEntries))
       }
       setLoading(false)
       return
@@ -121,12 +122,12 @@ export function useNotes({ userId, isDemoMode }) {
       // Only update cache when we actually get data back
       if (data && data.length >= 0) {
         setEntries(data)
-        localStorage.setItem(LS_CACHE_KEY, JSON.stringify(data))
+        // localStorage.setItem(LS_CACHE_KEY, JSON.stringify(data))
       }
     } catch (err) {
       console.error('[Notes] Fetch error:', err.message)
-      const cached = localStorage.getItem(LS_CACHE_KEY)
-      if (cached) setEntries(JSON.parse(cached))
+      // const cached = localStorage.getItem(LS_CACHE_KEY)
+      // if (cached) setEntries(JSON.parse(cached))
       setError(err.message)
     } finally {
       setLoading(false)
@@ -160,7 +161,7 @@ export function useNotes({ userId, isDemoMode }) {
     // Optimistic update
     const updated = [newEntry, ...entries]
     setEntries(updated)
-    localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
 
     if (isDemoMode) return newEntry
 
@@ -224,7 +225,7 @@ export function useNotes({ userId, isDemoMode }) {
         : e
     )
     setEntries(updated)
-    localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
 
     if (isDemoMode) return
 
@@ -249,7 +250,7 @@ export function useNotes({ userId, isDemoMode }) {
   const deleteEntry = useCallback(async (id) => {
     const updated = entries.filter(e => e.id !== id)
     setEntries(updated)
-    localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE_KEY, JSON.stringify(updated))
 
     if (isDemoMode) return
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-const LS_KEY = 'loco_goals_cache'
+// const LS_KEY = 'loco_goals_cache'
 
 // ─── Demo seed data (includes tasks) ───────────────────────────────────────
 const DEMO_GOALS = [
@@ -104,11 +104,11 @@ export function useGoals({ userId, isDemoMode }) {
 
       // Only overwrite cache when Supabase actually responds with data
       setGoals(goalsData)
-      localStorage.setItem(LS_KEY, JSON.stringify(goalsData))
+      // localStorage.setItem(LS_KEY, JSON.stringify(goalsData))
     } catch (err) {
       console.error('[Goals] Fetch error:', err.message)
-      const cached = localStorage.getItem(LS_KEY)
-      if (cached) setGoals(JSON.parse(cached))
+      // const cached = localStorage.getItem(LS_KEY)
+      // if (cached) setGoals(JSON.parse(cached))
       setError(err.message)
     } finally {
       setLoading(false)
@@ -165,7 +165,7 @@ export function useGoals({ userId, isDemoMode }) {
     // Optimistic update
     const updated = [newGoal, ...goals]
     setGoals(updated)
-    localStorage.setItem(LS_KEY, JSON.stringify(updated))
+    // localStorage.setItem(LS_KEY, JSON.stringify(updated))
 
     if (isDemoMode) return newGoal
 
@@ -213,7 +213,7 @@ export function useGoals({ userId, isDemoMode }) {
         // Replace the optimistic entry with server data
         setGoals(prev => {
           const list = [fullGoal, ...prev.filter(g => g.id !== newGoal.id)]
-          localStorage.setItem(LS_KEY, JSON.stringify(list))
+          // localStorage.setItem(LS_KEY, JSON.stringify(list))
           return list
         })
 
@@ -263,7 +263,7 @@ export function useGoals({ userId, isDemoMode }) {
 
     const updatedGoals = goals.map(g => g.id === goalId ? updatedGoal : g)
     setGoals(updatedGoals)
-    localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
+    // localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
 
     if (isDemoMode) return
 
@@ -287,7 +287,7 @@ export function useGoals({ userId, isDemoMode }) {
       console.error('[Goals] Toggle task error:', err.message)
       // Revert optimistic update on failure
       setGoals(goals)
-      localStorage.setItem(LS_KEY, JSON.stringify(goals))
+      // localStorage.setItem(LS_KEY, JSON.stringify(goals))
     }
   }, [goals, isDemoMode])
 
@@ -302,7 +302,7 @@ export function useGoals({ userId, isDemoMode }) {
     const changes = { progress: newProgress, status: newStatus }
     const updatedGoals = goals.map(g => g.id === id ? { ...g, ...changes } : g)
     setGoals(updatedGoals)
-    localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
+    // localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
 
     if (isDemoMode) return
 
@@ -318,7 +318,7 @@ export function useGoals({ userId, isDemoMode }) {
   const updateGoalStatus = useCallback(async (id, status) => {
     const updatedGoals = goals.map(g => g.id === id ? { ...g, status } : g)
     setGoals(updatedGoals)
-    localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
+    // localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
 
     if (isDemoMode) return
 
@@ -334,7 +334,7 @@ export function useGoals({ userId, isDemoMode }) {
   const deleteGoal = useCallback(async (id) => {
     const updatedGoals = goals.filter(g => g.id !== id)
     setGoals(updatedGoals)
-    localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
+    // localStorage.setItem(LS_KEY, JSON.stringify(updatedGoals))
 
     if (isDemoMode) return
 

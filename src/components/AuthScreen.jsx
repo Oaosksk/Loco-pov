@@ -12,7 +12,6 @@ const GoogleIcon = () => (
 
 export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) {
   const [isSignUp, setIsSignUp] = useState(false)
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -146,27 +145,6 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
 
         {/* Email form */}
         <form onSubmit={handleEmailSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {/* Username input */}
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '0.65rem',
-                  color: '#E6EDF3',
-                  padding: '0.8rem 1rem',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-                onFocus={e => e.target.style.borderColor = 'rgba(120,80,255,0.6)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
-              />
           <input
             type="email"
             placeholder="Email"

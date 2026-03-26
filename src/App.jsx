@@ -4,7 +4,7 @@ import { useAuth } from './hooks/useAuth'
 import { useDarkMode } from './hooks/useDarkMode'
 import { AuthScreen } from './components/AuthScreen'
 import { Layout } from './components/Layout'
-import { Dashboard } from './pages/Dashboard'
+// import { Dashboard } from './pages/Dashboard'
 import { Notes } from './pages/Notes'
 import { Goals } from './pages/Goals'
 import { Expenses } from './pages/Expenses'
@@ -42,8 +42,8 @@ function AppInner({ user, isDemoMode, onSignOut, isDark, toggleDark }) {
         isDemoMode={isDemoMode}
       >
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Navigate to="/notes" replace />} />
+          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
           <Route path="/notes" element={<Notes userId={user?.id} isDemoMode={isDemoMode} />} />
           <Route path="/goals" element={<Goals userId={user?.id} isDemoMode={isDemoMode} />} />
           <Route path="/todos" element={<Todos />} />
@@ -52,7 +52,7 @@ function AppInner({ user, isDemoMode, onSignOut, isDark, toggleDark }) {
           <Route path="/drive" element={<Drive />} />
           <Route path="/ai" element={<AI user={user} notes={[]} goals={[]} />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/notes" replace />} />
         </Routes>
       </Layout>
     </BrowserRouter>

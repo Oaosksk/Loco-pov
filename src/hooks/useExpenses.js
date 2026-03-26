@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-const LS_CACHE = 'loco_expenses_cache'
+// const LS_CACHE = 'loco_expenses_cache'
 
 export function useExpenses({ userId, isDemoMode } = {}) {
   const [expenses, setExpenses] = useState([])
@@ -49,11 +49,11 @@ export function useExpenses({ userId, isDemoMode } = {}) {
       if (fetchErr) throw fetchErr
 
       setExpenses(data || [])
-      if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
+      // if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
     } catch (err) {
       console.error('[Expenses] Fetch error:', err.message)
-      const cached = localStorage.getItem(LS_CACHE)
-      if (cached) setExpenses(JSON.parse(cached))
+      // const cached = localStorage.getItem(LS_CACHE)
+      // if (cached) setExpenses(JSON.parse(cached))
       setError(err.message)
     } finally {
       setLoading(false)
@@ -78,7 +78,7 @@ export function useExpenses({ userId, isDemoMode } = {}) {
 
     const updated = [newExpense, ...expenses]
     setExpenses(updated)
-    localStorage.setItem(LS_CACHE, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE, JSON.stringify(updated))
 
     if (isDemoMode) return newExpense
 
@@ -107,7 +107,7 @@ export function useExpenses({ userId, isDemoMode } = {}) {
   const deleteExpense = useCallback(async (id) => {
     const updated = expenses.filter(e => e.id !== id)
     setExpenses(updated)
-    localStorage.setItem(LS_CACHE, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE, JSON.stringify(updated))
 
     if (isDemoMode) return
 

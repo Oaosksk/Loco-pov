@@ -27,7 +27,7 @@ export function useAuth() {
       provider: 'google',
       options: {
         scopes: 'https://www.googleapis.com/auth/drive.readonly',
-        redirectTo: window.location.origin + '/dashboard',
+        redirectTo: window.location.origin + '/notes',
       },
     })
     if (error) throw error

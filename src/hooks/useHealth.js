@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-const LS_CACHE = 'loco_health_cache'
+// const LS_CACHE = 'loco_health_cache'
 
 export function useHealth({ userId, isDemoMode } = {}) {
   const [logs, setLogs] = useState([])
@@ -35,7 +35,7 @@ export function useHealth({ userId, isDemoMode } = {}) {
           { id: 'h8', metric: 'steps', value: 8500, unit: 'steps', note: 'Walking', date: dayBefore, created_at: new Date(Date.now() - 172800000).toISOString() },
         ]
         setLogs(demo)
-        localStorage.setItem(LS_CACHE, JSON.stringify(demo))
+        // localStorage.setItem(LS_CACHE, JSON.stringify(demo))
       }
       setLoading(false)
       return
@@ -51,11 +51,11 @@ export function useHealth({ userId, isDemoMode } = {}) {
       if (fetchErr) throw fetchErr
 
       setLogs(data || [])
-      if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
+      // if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
     } catch (err) {
       console.error('[Health] Fetch error:', err.message)
-      const cached = localStorage.getItem(LS_CACHE)
-      if (cached) setLogs(JSON.parse(cached))
+      // const cached = localStorage.getItem(LS_CACHE)
+      // if (cached) setLogs(JSON.parse(cached))
       setError(err.message)
     } finally {
       setLoading(false)
@@ -80,7 +80,7 @@ export function useHealth({ userId, isDemoMode } = {}) {
 
     const updated = [newLog, ...logs]
     setLogs(updated)
-    localStorage.setItem(LS_CACHE, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE, JSON.stringify(updated))
 
     if (isDemoMode) return newLog
 
@@ -109,7 +109,7 @@ export function useHealth({ userId, isDemoMode } = {}) {
   const deleteLog = useCallback(async (id) => {
     const updated = logs.filter(l => l.id !== id)
     setLogs(updated)
-    localStorage.setItem(LS_CACHE, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE, JSON.stringify(updated))
 
     if (isDemoMode) return
 

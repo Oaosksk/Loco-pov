@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import {LayoutDashboard, BookOpen, Target, Wallet, Heart, Brain, Settings, LogOut, MoreVertical, HardDrive} from 'lucide-react'
+import {LayoutDashboard, BookOpen, Target, Wallet, Heart, Brain, Settings, LogOut, MoreVertical, HardDrive, AlarmClock} from 'lucide-react'
 
 const MAIN_NAV = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard},
+  // { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard},
   { to: '/notes', label: 'Notes', icon: BookOpen},
   { to: '/goals', label: 'Goals', icon: Target},
+  { to: '/alarm', label: 'Remainder', icon: AlarmClock},
   { to: '/expenses', label: 'Expenses', icon: Wallet},
 ]
 

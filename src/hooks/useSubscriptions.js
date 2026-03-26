@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-const LS_CACHE = 'loco_subscriptions_cache'
+// const LS_CACHE = 'loco_subscriptions_cache'
 
 export function useSubscriptions({ userId, isDemoMode } = {}) {
   const [subscriptions, setSubscriptions] = useState([])
@@ -17,10 +17,11 @@ export function useSubscriptions({ userId, isDemoMode } = {}) {
     setError(null)
 
     if (isDemoMode) {
-      const cached = localStorage.getItem(LS_CACHE)
-      if (cached) {
-        setSubscriptions(JSON.parse(cached))
-      } else {
+      // const cached = localStorage.getItem(LS_CACHE)
+      // if (cached) {
+      //   setSubscriptions(JSON.parse(cached))
+      // } else 
+        {
         const demo = [
           { id: 's1', name: 'Netflix', amount: 649, cycle: 'monthly', next_due: '2026-04-15', remind_days_before: 3, created_at: new Date().toISOString() },
           { id: 's2', name: 'Spotify', amount: 119, cycle: 'monthly', next_due: '2026-04-01', remind_days_before: 2, created_at: new Date().toISOString() },
@@ -28,7 +29,7 @@ export function useSubscriptions({ userId, isDemoMode } = {}) {
           { id: 's4', name: 'YouTube Premium', amount: 149, cycle: 'monthly', next_due: '2026-04-20', remind_days_before: 3, created_at: new Date().toISOString() },
         ]
         setSubscriptions(demo)
-        localStorage.setItem(LS_CACHE, JSON.stringify(demo))
+        // localStorage.setItem(LS_CACHE, JSON.stringify(demo))
       }
       setLoading(false)
       return
@@ -43,11 +44,11 @@ export function useSubscriptions({ userId, isDemoMode } = {}) {
       if (fetchErr) throw fetchErr
 
       setSubscriptions(data || [])
-      if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
+      // if (data) localStorage.setItem(LS_CACHE, JSON.stringify(data))
     } catch (err) {
       console.error('[Subscriptions] Fetch error:', err.message)
-      const cached = localStorage.getItem(LS_CACHE)
-      if (cached) setSubscriptions(JSON.parse(cached))
+      // const cached = localStorage.getItem(LS_CACHE)
+      // if (cached) setSubscriptions(JSON.parse(cached))
       setError(err.message)
     } finally {
       setLoading(false)
@@ -72,7 +73,7 @@ export function useSubscriptions({ userId, isDemoMode } = {}) {
 
     const updated = [newSub, ...subscriptions]
     setSubscriptions(updated)
-    localStorage.setItem(LS_CACHE, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE, JSON.stringify(updated))
 
     if (isDemoMode) return newSub
 
@@ -101,7 +102,7 @@ export function useSubscriptions({ userId, isDemoMode } = {}) {
   const deleteSubscription = useCallback(async (id) => {
     const updated = subscriptions.filter(s => s.id !== id)
     setSubscriptions(updated)
-    localStorage.setItem(LS_CACHE, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE, JSON.stringify(updated))
 
     if (isDemoMode) return
 
@@ -116,7 +117,7 @@ export function useSubscriptions({ userId, isDemoMode } = {}) {
   const updateSubscription = useCallback(async (id, changes) => {
     const updated = subscriptions.map(s => s.id === id ? { ...s, ...changes } : s)
     setSubscriptions(updated)
-    localStorage.setItem(LS_CACHE, JSON.stringify(updated))
+    // localStorage.setItem(LS_CACHE, JSON.stringify(updated))
 
     if (isDemoMode) return
 
