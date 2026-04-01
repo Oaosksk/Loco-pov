@@ -49,7 +49,6 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
       overflow: 'hidden',
     }}>
 
-      {/* Bottom glow */}
       <div style={{
         position: 'absolute',
         bottom: 0,
@@ -61,10 +60,8 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
         pointerEvents: 'none',
       }} />
 
-      {/* Top — headline + bat inline */}
       <div style={{ width: '100%', maxWidth: '400px', padding: '0 clamp(1.25rem, 6vw, 2rem)', textAlign: 'left' }}>
 
-        {/* Row 1: "Your life," + gif */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{
             fontFamily: "'Playfair Display', Georgia, serif",
@@ -80,7 +77,6 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
           />
         </div>
 
-        {/* Row 2: "written down." */}
         <p style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 'clamp(2.2rem, 8vw, 2.8rem)',
@@ -96,7 +92,6 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
         </p>
       </div>
 
-      {/* Bottom — form */}
       <div style={{
         width: '100%',
         maxWidth: '400px',
@@ -108,7 +103,6 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
         zIndex: 1,
       }}>
 
-        {/* Google */}
         <button
           onClick={onSignIn}
           disabled={loading}
@@ -136,14 +130,12 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
           Continue with Google
         </button>
 
-        {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.2rem 0' }}>
           <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
           <span style={{ color: '#8B949E', fontSize: '0.75rem' }}>or</span>
           <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
         </div>
 
-        {/* Email form */}
         <form onSubmit={handleEmailSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <input
             type="email"
@@ -217,7 +209,6 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
           </button>
         </form>
 
-        {/* Toggle */}
         <p style={{ textAlign: 'center', fontSize: '0.78rem', color: '#8B949E', margin: '0.2rem 0 0' }}>
           {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
           <button

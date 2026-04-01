@@ -1,6 +1,3 @@
-// Sheet.jsx — Enhanced Notes Editor
-// Drop-in replacement for your existing Sheet component
-
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import {
   X, Mic, MicOff, Image, Sparkles, Type, MoreVertical,
@@ -10,7 +7,6 @@ import {
   Check, Loader2, ArrowLeft
 } from 'lucide-react'
 
-/* ── Theme definitions ─────────────────────────────── */
 const THEMES = {
   dark:  { label: 'Dark',  bg: '#0f0f0f', surface: '#1a1a1a', text: '#e8e8e8', muted: '#555', border: '#2a2a2a', accent: '#e8e8e8' },
   light: { label: 'Light', bg: '#fafaf8', surface: '#ffffff', text: '#1a1a1a', muted: '#888', border: '#e5e5e5', accent: '#1a1a1a' },
@@ -22,8 +18,6 @@ const TEXT_SIZES = ['10px','12px','14px','16px','18px','20px','24px','28px','32p
 const TEXT_COLORS = ['#e8e8e8','#ff6b6b','#ffd93d','#6bcb77','#4ecdc4','#74b9ff','#a29bfe','#fd79a8','#888','#ffffff']
 const HIGHLIGHT_COLORS = ['#ffd93d55','#ff6b6b44','#6bcb7744','#74b9ff44','#a29bfe44']
 
-/* ── Format timestamp ──────────────────────────────── */
-// ADDED: Helper to format Date objects into readable strings like "24 March 10:19 AM"
 function formatStamp(date) {
   if (!date) return ''
   return date.toLocaleString('en-IN', {
@@ -32,7 +26,6 @@ function formatStamp(date) {
   })
 }
 
-/* ── Toolbar Button ────────────────────────────────── */
 function ToolBtn({ onClick, active, title, children, style = {} }) {
   return (
     <button
@@ -51,7 +44,6 @@ function ToolBtn({ onClick, active, title, children, style = {} }) {
   )
 }
 
-/* ── Color Picker Popup ────────────────────────────── */
 function ColorPicker({ colors, onSelect, onClose }) {
   return (
     <div style={{
@@ -68,7 +60,6 @@ function ColorPicker({ colors, onSelect, onClose }) {
   )
 }
 
-/* ── Size Picker Popup ─────────────────────────────── */
 function SizePicker({ sizes, onSelect, onClose }) {
   return (
     <div style={{
@@ -87,7 +78,6 @@ function SizePicker({ sizes, onSelect, onClose }) {
   )
 }
 
-/* ── Three-Dot Menu ────────────────────────────────── */
 function ThreeDotMenu({ onFind, onDelete, onShare, onSettings, theme, onTheme, onClose }) {
   const items = [
     { icon: <Search size={13}/>, label: 'Find', action: onFind },
@@ -140,7 +130,6 @@ function ThreeDotMenu({ onFind, onDelete, onShare, onSettings, theme, onTheme, o
   )
 }
 
-/* ── Find Bar ──────────────────────────────────────── */
 function FindBar({ onClose }) {
   const [query, setQuery] = useState('')
   return (
@@ -161,7 +150,6 @@ function FindBar({ onClose }) {
   )
 }
 
-/* ── AI Summary Modal ──────────────────────────────── */
 function AISummaryModal({ content, onClose }) {
   const [summary, setSummary] = useState('')
   const [loading, setLoading] = useState(true)
@@ -224,28 +212,23 @@ function AISummaryModal({ content, onClose }) {
   )
 }
 
-/* ── Main Sheet Component ──────────────────────────── */
 export function Sheet({ open, onClose, title, children }) {
   const overlayRef      = useRef(null)
   const editorRef       = useRef(null)
   const fileInputRef    = useRef(null)
 
-  // Theme
   const [theme, setTheme]           = useState('dark')
   const t = THEMES[theme]
 
-  // ADDED: Timestamps — set createdAt once when the sheet opens, modifiedAt updates on every edit
   const [createdAt, setCreatedAt]   = useState(null)
   const [modifiedAt, setModifiedAt] = useState(null)
   const [isMobile, setIsMobile]     = useState(false) // ADDED: detect mobile vs desktop
 
-  // Undo / Redo history
   const history        = useRef([''])
   const histIdx        = useRef(0)
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
-  // UI state
   const [showTextMenu, setShowTextMenu]   = useState(false)
   const [showThreeDot, setShowThreeDot]   = useState(false)
   const [showColorPick, setShowColorPick] = useState(false)
@@ -258,7 +241,6 @@ export function Sheet({ open, onClose, title, children }) {
 
   const recognitionRef = useRef(null)
 
-  // ADDED: Set createdAt timestamp when the sheet first opens; reset on close
   useEffect(() => {
     if (open) {
       const now = new Date()
@@ -270,7 +252,6 @@ export function Sheet({ open, onClose, title, children }) {
     }
   }, [open])
 
-  // ADDED: Detect mobile breakpoint and update on resize
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 600)
     check()
@@ -311,7 +292,6 @@ export function Sheet({ open, onClose, title, children }) {
     pushHistory(editorRef.current?.innerHTML || '')
   }, [pushHistory])
 
-  /* Voice to text */
   const toggleVoice = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) { alert('Speech recognition not supported in this browser.'); return }
@@ -342,7 +322,6 @@ export function Sheet({ open, onClose, title, children }) {
     setIsListening(true)
   }, [isListening, pushHistory])
 
-  /* Image upload */
   const handleImageUpload = useCallback((e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -354,14 +333,12 @@ export function Sheet({ open, onClose, title, children }) {
     e.target.value = ''
   }, [execCmd])
 
-  /* AI Summary */
   const handleAI = () => {
     const text = editorRef.current?.innerText || ''
     setAiContent(text)
     setShowAI(true)
   }
 
-  /* Close on Escape */
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') onClose()
@@ -376,7 +353,6 @@ export function Sheet({ open, onClose, title, children }) {
     }
   }, [open, onClose])
 
-  /* Click outside to close sub-menus */
   useEffect(() => {
     const handler = () => {
       setShowThreeDot(false)
@@ -459,16 +435,12 @@ export function Sheet({ open, onClose, title, children }) {
             borderBottom: '0.5px solid var(--sh-border)',
             flexShrink: 0,
           }}>
-            {/* ── LEFT SIDE ──
-                ADDED: Mobile shows ← back arrow; Desktop shows Undo/Redo buttons */}
             <div style={{ display: 'flex', gap: 2, minWidth: 64 }}>
               {isMobile ? (
-                /* ADDED: Back arrow for mobile — tapping closes the notepad */
                 <ToolBtn onClick={onClose} title="Back" style={{ color: 'var(--sh-text)' }}>
                   <ArrowLeft size={18} />
                 </ToolBtn>
               ) : (
-                /* Existing undo/redo — shown only on desktop */
                 <>
                   <ToolBtn onClick={handleUndo} title="Undo" style={{ opacity: canUndo ? 1 : 0.3, color: 'var(--sh-text)' }}>
                     <Undo2 size={15} />
@@ -480,7 +452,6 @@ export function Sheet({ open, onClose, title, children }) {
               )}
             </div>
 
-            {/* Title — centred absolutely so it stays perfectly centered regardless of side button widths */}
             <h2 style={{
               fontFamily: 'Georgia, serif', fontWeight: 700,
               fontSize: 15, color: 'var(--sh-text)',
@@ -490,11 +461,7 @@ export function Sheet({ open, onClose, title, children }) {
               {title}
             </h2>
 
-            {/* ── RIGHT SIDE ──
-                ADDED: Desktop gets an X close button alongside the three-dot menu
-                       Mobile only shows the three-dot menu (back arrow handles closing) */}
             <div style={{ display: 'flex', gap: 2, alignItems: 'center', minWidth: 64, justifyContent: 'flex-end' }}>
-              {/* Three-dot menu — always visible */}
               <div style={{ position: 'relative' }} onMouseDown={e => e.stopPropagation()}>
                 <ToolBtn
                   onClick={() => { setShowThreeDot(v => !v); setShowTextMenu(false) }}
@@ -516,7 +483,6 @@ export function Sheet({ open, onClose, title, children }) {
                 )}
               </div>
 
-              {/* ADDED: X close button — desktop only */}
               {!isMobile && (
                 <ToolBtn onClick={onClose} title="Close" style={{ color: 'var(--sh-muted)' }}>
                   <X size={15} />
@@ -525,10 +491,6 @@ export function Sheet({ open, onClose, title, children }) {
             </div>
           </div>
 
-          {/* ── ADDED: Date / time bar ──────────────────────────────────────────
-              Shows "Created" timestamp and "Modified" timestamp below the header,
-              matching the style from the screenshot (muted, small, pipe-separated).
-              modifiedAt is updated on every keystroke via the onInput handler below. */}
           {(createdAt || modifiedAt) && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
@@ -549,7 +511,6 @@ export function Sheet({ open, onClose, title, children }) {
             </div>
           )}
 
-          {/* ── Toolbar ── */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 2,
             padding: '8px 14px',
@@ -557,7 +518,6 @@ export function Sheet({ open, onClose, title, children }) {
             background: 'var(--sh-bg)',
             overflowX: 'auto', flexShrink: 0,
           }}>
-            {/* Voice */}
             <ToolBtn onClick={toggleVoice} title={isListening ? 'Stop recording' : 'Voice to text'}
               style={{ color: isListening ? '#ff6b6b' : 'var(--sh-text)' }}
             >
@@ -566,7 +526,6 @@ export function Sheet({ open, onClose, title, children }) {
               </span>
             </ToolBtn>
 
-            {/* Image upload */}
             <ToolBtn onClick={() => fileInputRef.current?.click()} title="Upload image"
               style={{ color: 'var(--sh-text)' }}>
               <Image size={16} />
@@ -574,16 +533,13 @@ export function Sheet({ open, onClose, title, children }) {
             <input ref={fileInputRef} type="file" accept="image/*"
               onChange={handleImageUpload} style={{ display: 'none' }} />
 
-            {/* AI Summary */}
             <ToolBtn onClick={handleAI} title="AI Summary"
               style={{ color: 'var(--sh-text)' }}>
               <Sparkles size={16} />
             </ToolBtn>
 
-            {/* Divider */}
             <div style={{ width: '0.5px', height: 20, background: 'var(--sh-border)', margin: '0 4px', flexShrink: 0 }} />
 
-            {/* Text editing toggle */}
             <div style={{ position: 'relative' }} onMouseDown={e => e.stopPropagation()}>
               <ToolBtn
                 onClick={() => { setShowTextMenu(v => !v); setShowThreeDot(false) }}
@@ -595,7 +551,6 @@ export function Sheet({ open, onClose, title, children }) {
                 <ChevronDown size={10} style={{ opacity: 0.6 }} />
               </ToolBtn>
 
-              {/* ── Text Formatting Sub-menu ── */}
               {showTextMenu && (
                 <div style={{
                   position: 'absolute', top: '110%', left: '50%', transform: 'translateX(-50%)',
@@ -606,7 +561,6 @@ export function Sheet({ open, onClose, title, children }) {
                   display: 'flex', flexDirection: 'column', gap: 8,
                   minWidth: 240,
                 }}>
-                  {/* Row 1: Size + Color + Highlight */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <div style={{ position: 'relative' }} onMouseDown={e => e.stopPropagation()}>
                       <ToolBtn onClick={() => { setShowSizePick(v => !v); setShowColorPick(false); setShowHLPick(false) }}
@@ -656,7 +610,6 @@ export function Sheet({ open, onClose, title, children }) {
             </div>
           </div>
 
-          {/* ── Scrollable content ── */}
           <div style={{ overflowY: 'auto', flex: 1, padding: '16px 18px 24px' }}>
             {children ? (
               <div>{children}</div>
@@ -668,7 +621,7 @@ export function Sheet({ open, onClose, title, children }) {
                 className="sh-editor"
                 onInput={() => {
                   pushHistory(editorRef.current?.innerHTML || '')
-                  setModifiedAt(new Date()) // ADDED: update "last modified" timestamp on every keystroke
+                  setModifiedAt(new Date())
                 }}
                 style={{
                   color: 'var(--sh-text)', fontSize: 14, lineHeight: 1.75,

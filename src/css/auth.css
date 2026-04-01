@@ -1,0 +1,193 @@
+.auth-screen {
+  min-height: 100svh;
+  background: radial-gradient(ellipse at 50% 100%, #2a1f4e 0%, #1a1333 30%, #0e0c1a 60%, #080810 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5.5rem;
+  font-family: var(--font-sans);
+  position: relative;
+  overflow: hidden;
+  padding: 2rem 0;
+}
+
+.auth-screen__glow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 220px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(120, 80, 255, 0.35) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.auth-hero {
+  width: 100%;
+  max-width: 400px;
+  padding: 0 clamp(1.25rem, 6vw, 2rem);
+  text-align: left;
+}
+
+.auth-hero__headline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-hero__headline {
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 8vw, 2.8rem);
+  font-weight: 700;
+  color: #E6EDF3;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.auth-hero__headline--italic {
+  font-style: italic;
+  font-weight: 400;
+  color: #c8d0db;
+  margin: 0 0 1rem;
+}
+
+.auth-hero__bat-gif {
+  width: clamp(48px, 11vw, 64px);
+  height: clamp(48px, 11vw, 64px);
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.auth-hero__tagline {
+  color: #8B949E;
+  font-size: clamp(0.8rem, 3vw, 0.9rem);
+  line-height: 1.6;
+  max-width: 300px;
+  margin: 0;
+}
+
+.auth-form-section {
+  width: 100%;
+  max-width: 400px;
+  padding: 0 clamp(1.25rem, 6vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #E6EDF3;
+  transition: background var(--transition-fast);
+  font-family: var(--font-sans);
+}
+.auth-google-btn:hover    { background: rgba(255, 255, 255, 0.1); }
+.auth-google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.2rem 0;
+}
+.auth-divider__line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.auth-divider__text {
+  color: #8B949E;
+  font-size: 0.75rem;
+}
+
+.auth-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.65rem;
+  color: #E6EDF3;
+  padding: 0.8rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  transition: border-color var(--transition-fast);
+}
+.auth-input::placeholder { color: #8B949E; }
+.auth-input:focus        { border-color: rgba(120, 80, 255, 0.6); }
+
+.auth-submit-btn {
+  width: 100%;
+  padding: 0.85rem;
+  border-radius: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #E6EDF3;
+  transition: background var(--transition-fast);
+  margin-top: 0.1rem;
+  font-family: var(--font-sans);
+}
+.auth-submit-btn:hover    { background: rgba(255, 255, 255, 0.12); }
+.auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-message {
+  font-size: 0.75rem;
+  margin: 0.1rem 0;
+}
+.auth-message--error   { color: #F85149; }
+.auth-message--success { color: #3FB950; }
+
+.auth-toggle-text {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #8B949E;
+  margin: 0.2rem 0 0;
+}
+.auth-toggle-btn {
+  background: none;
+  border: none;
+  color: #E6EDF3;
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.auth-footer-note {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #8B949E;
+  opacity: 0.5;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .auth-screen { gap: 3rem; }
+}
+
+@media (max-height: 700px) {
+  .auth-screen { gap: 2rem; justify-content: flex-start; padding-top: 3rem; }
+}
