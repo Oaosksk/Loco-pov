@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {LayoutDashboard, BookOpen, Target, Wallet, Heart, Brain, Settings, LogOut, MoreVertical, HardDrive, AlarmClock} from 'lucide-react'
 
 const MAIN_NAV = [
-  // { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard},
   { to: '/notes', label: 'Notes', icon: BookOpen},
   { to: '/goals', label: 'Goals', icon: Target},
   { to: '/alarm', label: 'Remainder', icon: AlarmClock},
@@ -11,7 +10,6 @@ const MAIN_NAV = [
 ]
 
 const MORE_NAV = [
-  // { to: '/expenses', label: 'Expenses', icon: Wallet  },
   { to: '/drive', label: 'Drive', icon: HardDrive},
   { to: '/health', label: 'Health', icon: Heart},
   { to: '/ai', label: 'AI', icon: Brain},
@@ -69,7 +67,6 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
   return (
     <div style={{ minHeight: '100svh', background: BG, color: TEXT, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
-      {/* ── Top bar ──────────────────────────────────────── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 30,
         display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px', height: 48,
@@ -93,12 +90,10 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
         <Avatar user={user} />
       </header>
 
-      {/* ── Page content ─────────────────────────────────── */}
       <main style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px 120px', animationName: 'fadeIn', animationDuration: '0.2s' }}>
         {children}
       </main>
 
-      {/* ── Bottom nav ───────────────────────────────────── */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30, padding: '0 16px 20px' }}>
         <div style={{
           width: '100%', maxWidth: 480, margin: '0 auto',
@@ -132,10 +127,8 @@ export function Layout({ user, isDark, onToggleDark, onSignOut, children }) {
             </NavLink>
           ))}
 
-          {/* Spacer */}
           <div style={{ flex: 1 }} />
 
-          {/* More */}
           <div style={{ position: 'relative' }} ref={moreRef}>
             {moreOpen && (
               <div style={{

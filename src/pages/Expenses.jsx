@@ -13,15 +13,15 @@ import 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 
 const CATEGORY_COLORS = {
-  transport:     'border-border-dark text-muted-dark',
-  food:          'border-border-dark text-muted-dark',
-  shopping:      'border-border-dark text-muted-dark',
+  transport: 'border-border-dark text-muted-dark',
+  food: 'border-border-dark text-muted-dark',
+  shopping: 'border-border-dark text-muted-dark',
   entertainment: 'border-border-dark text-muted-dark',
-  health:        'border-border-dark text-muted-dark',
-  bills:         'border-border-dark text-muted-dark',
-  education:     'border-border-dark text-muted-dark',
-  personal:      'border-border-dark text-muted-dark',
-  other:         'border-border-dark text-muted-dark',
+  health: 'border-border-dark text-muted-dark',
+  bills: 'border-border-dark text-muted-dark',
+  education: 'border-border-dark text-muted-dark',
+  personal: 'border-border-dark text-muted-dark',
+  other: 'border-border-dark text-muted-dark',
 }
 
 const CATEGORY_EMOJIS = {
@@ -56,7 +56,6 @@ function getMonthStart() {
   return new Date(now.getFullYear(), now.getMonth(), 1)
 }
 
-// ─── Add Expense Sheet ───
 function AddExpenseSheet({ open, onClose, onAdd }) {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -123,7 +122,6 @@ function AddExpenseSheet({ open, onClose, onAdd }) {
   )
 }
 
-// ─── Add Subscription Sheet ───
 function AddSubSheet({ open, onClose, onAdd }) {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
@@ -198,14 +196,13 @@ export function Expenses() {
   const [filter, setFilter] = useState('month')
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [showAddSub, setShowAddSub] = useState(false)
-  const [activeTab, setActiveTab] = useState('expenses') // 'expenses' | 'subscriptions'
+  const [activeTab, setActiveTab] = useState('expenses')
 
   const monthTotal = getMonthTotal()
   const weekTotal = getWeekTotal()
   const categoryBreakdown = getCategoryBreakdown()
   const subMonthlyTotal = getMonthlyTotal()
 
-  // Filter expenses
   const filtered = useMemo(() => {
     const now = new Date()
     const today = now.toISOString().split('T')[0]
@@ -220,7 +217,6 @@ export function Expenses() {
 
   const filteredTotal = filtered.reduce((sum, e) => sum + (e.amount || 0), 0)
 
-  // Export functions
   const exportPDF = () => {
     const doc = new jsPDF()
     doc.setFontSize(16)
@@ -261,7 +257,6 @@ export function Expenses() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">Expenses</h1>
@@ -287,7 +282,6 @@ export function Expenses() {
         </div>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3">
         <div className="card p-4 text-center">
           <p className="text-xs text-muted-light dark:text-muted-dark font-semibold mb-1">This Week</p>
@@ -303,7 +297,6 @@ export function Expenses() {
         </div>
       </div>
 
-      {/* Tab toggle */}
       <div className="flex gap-2">
         <button
           onClick={() => setActiveTab('expenses')}
@@ -327,10 +320,8 @@ export function Expenses() {
         </button>
       </div>
 
-      {/* ─── Expenses Tab ─── */}
       {activeTab === 'expenses' && (
         <>
-          {/* Filters */}
           <div className="flex gap-2">
             {['day', 'week', 'month', 'all'].map(f => (
               <button
@@ -347,7 +338,6 @@ export function Expenses() {
             ))}
           </div>
 
-          {/* Category breakdown */}
           {categoryBreakdown.length > 0 && (
             <div className="card p-4">
               <h3 className="text-xs font-semibold text-muted-light dark:text-muted-dark mb-3">Category Breakdown (This Month)</h3>
@@ -373,7 +363,6 @@ export function Expenses() {
             </div>
           )}
 
-          {/* Expenses table */}
           {loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map(i => (
@@ -438,7 +427,6 @@ export function Expenses() {
         </>
       )}
 
-      {/* ─── Subscriptions Tab ─── */}
       {activeTab === 'subscriptions' && (
         <>
           {subscriptions.length === 0 ? (
@@ -512,7 +500,6 @@ export function Expenses() {
         </>
       )}
 
-      {/* Sheets */}
       <AddExpenseSheet open={showAddExpense} onClose={() => setShowAddExpense(false)} onAdd={addExpense} />
       <AddSubSheet open={showAddSub} onClose={() => setShowAddSub(false)} onAdd={addSubscription} />
     </div>
