@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-// const LS_CACHE = 'loco_expenses_cache'
+const LS_CACHE = 'loco_expenses_cache'
 
 export function useExpenses({ userId, isDemoMode } = {}) {
   const [expenses, setExpenses] = useState([])

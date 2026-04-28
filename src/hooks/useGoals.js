@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-// const LS_KEY = 'loco_goals_cache'
+const LS_KEY = 'loco_goals_cache'
 
 // ─── Demo seed data (includes tasks) ───────────────────────────────────────
 const DEMO_GOALS = [
@@ -174,6 +174,7 @@ export function useGoals({ userId, isDemoMode }) {
       const { data: goalData, error: goalErr } = await supabase
         .from('goals')
         .insert({
+          user_id: userId,
           title: newGoal.title,
           progress: 0,
           target: resolvedTarget,

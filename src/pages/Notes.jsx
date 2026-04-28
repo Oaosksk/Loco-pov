@@ -108,18 +108,20 @@ function NoteCard({ entry, onEdit, onDelete }) {
   )
 }
 
-function FolderCard({ type, count, onClick }) {
+function FolderCard({ type, count, onClick, heightClass = 'h-32' }) {
   const label = TYPE_LABEL[type] || '📝 Note'
   return (
     <button
       onClick={onClick}
-      className="card p-4 text-left hover:border-muted-dark dark:hover:border-muted-dark transition-colors"
+      className={`card p-4 text-left hover:border-muted-dark dark:hover:border-muted-dark transition-colors w-full flex flex-col justify-between ${heightClass}`}
     >
-      <FileText size={20} className="text-muted-light dark:text-muted-dark mb-3" />
-      <p className="text-sm font-serif font-bold text-text-light dark:text-text-dark">{label}</p>
-      <p className="text-[11px] text-muted-light dark:text-muted-dark mt-0.5">
-        {count} entr{count !== 1 ? 'ies' : 'y'}
-      </p>
+      <FileText size={20} className="text-muted-light dark:text-muted-dark" />
+      <div>
+        <p className="text-sm font-serif font-bold text-text-light dark:text-text-dark">{label}</p>
+        <p className="text-[11px] text-muted-light dark:text-muted-dark mt-0.5">
+          {count} entr{count !== 1 ? 'ies' : 'y'}
+        </p>
+      </div>
     </button>
   )
 }
@@ -276,20 +278,20 @@ export function Notes({ userId, isDemoMode }) {
 
       {/* Search */}
       <div className="relative">
-        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-light dark:text-muted-dark" />
+        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-light dark:text-muted-dark pointer-events-none" />
         <input
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search entries…"
-          className="input pl-8 pr-8 text-sm"
+          className="input pl-10 pr-10 text-sm"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 btn-icon w-5 h-5"
           >
-            <X size={12} />
+            <X size={14} />
           </button>
         )}
       </div>
@@ -347,24 +349,30 @@ export function Notes({ userId, isDemoMode }) {
           </p>
         </div>
       ) : viewMode === 'folders' ? (
-        <div className="grid grid-cols-2 gap-3">
-          {Object.keys(folderGroups).map(type => (
-            <FolderCard
-              key={type}
-              type={type}
-              count={folderGroups[type].length}
-              onClick={() => { setFilterType(type); setViewMode('all') }}
-            />
-          ))}
-          <button
-            onClick={() => setShowAdd(true)}
-            className="card p-4 flex flex-col items-center justify-center gap-2
-                       border-dashed hover:border-muted-dark dark:hover:border-muted-dark
-                       transition-colors min-h-[100px]"
-          >
-            <FolderPlus size={20} className="text-muted-light dark:text-muted-dark" />
-            <span className="text-xs text-muted-light dark:text-muted-dark">New entry</span>
-          </button>
+        <div style={{ columns: 2, gap: '0.75rem' }}>
+          {Object.keys(folderGroups).map((type, i) => {
+            const sizes = ['h-24','h-32','h-28','h-36','h-40','h-28','h-32','h-24']
+            const h = sizes[i % sizes.length]
+            return (
+              <div key={type} style={{ breakInside: 'avoid', marginBottom: '0.75rem' }}>
+                <FolderCard
+                  type={type}
+                  count={folderGroups[type].length}
+                  onClick={() => { setFilterType(type); setViewMode('all') }}
+                  heightClass={h}
+                />
+              </div>
+            )
+          })}
+          <div style={{ breakInside: 'avoid', marginBottom: '0.75rem' }}>
+            <button
+              onClick={() => setShowAdd(true)}
+              className="card p-4 flex flex-col items-center justify-center gap-2 border-dashed hover:border-muted-dark dark:hover:border-muted-dark transition-colors w-full h-32"
+            >
+              <FolderPlus size={20} className="text-muted-light dark:text-muted-dark" />
+              <span className="text-xs text-muted-light dark:text-muted-dark">New entry</span>
+            </button>
+          </div>
         </div>
       ) : (
         <div>

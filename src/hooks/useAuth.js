@@ -27,20 +27,27 @@ export function useAuth() {
       provider: 'google',
       options: {
         scopes: 'https://www.googleapis.com/auth/drive.readonly',
-        redirectTo: window.location.origin + '/notes',
+        redirectTo: window.location.origin,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     })
     if (error) throw error
   }
 
   const signInWithEmail = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+    return data
   }
 
   const signUpWithEmail = async (email, password) => {
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    })
     if (error) throw error
+    return data
   }
 
   const signOut = async () => {

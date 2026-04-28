@@ -116,9 +116,8 @@ function AddHealthSheet({ open, onClose, onAdd }) {
   )
 }
 
-export function Health() {
-  const { user, isDemoMode } = useAuth()
-  const { groupedLogs, logs, loading, addLog, deleteLog, getStreak, getWeeklyTrend } = useHealth({ userId: user?.id, isDemoMode })
+export function Health({ userId, isDemoMode }) {
+  const { groupedLogs, logs, loading, addLog, deleteLog, getStreak, getWeeklyTrend } = useHealth({ userId, isDemoMode })
   const [showAdd, setShowAdd] = useState(false)
   const [selectedMetric, setSelectedMetric] = useState('workout')
 

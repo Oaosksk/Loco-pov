@@ -188,10 +188,9 @@ function AddSubSheet({ open, onClose, onAdd }) {
   )
 }
 
-export function Expenses() {
-  const { user, isDemoMode } = useAuth()
-  const { expenses, loading, addExpense, deleteExpense, getMonthTotal, getWeekTotal, getCategoryBreakdown } = useExpenses({ userId: user?.id, isDemoMode })
-  const { subscriptions, addSubscription, deleteSubscription, getMonthlyTotal, getDaysUntilRenewal } = useSubscriptions({ userId: user?.id, isDemoMode })
+export function Expenses({ userId, isDemoMode }) {
+  const { expenses, loading, addExpense, deleteExpense, getMonthTotal, getWeekTotal, getCategoryBreakdown } = useExpenses({ userId, isDemoMode })
+  const { subscriptions, addSubscription, deleteSubscription, getMonthlyTotal, getDaysUntilRenewal } = useSubscriptions({ userId, isDemoMode })
 
   const [filter, setFilter] = useState('month')
   const [showAddExpense, setShowAddExpense] = useState(false)

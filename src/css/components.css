@@ -71,7 +71,10 @@
   outline: none;
   transition: border-color var(--transition-fast);
   caret-color: var(--text);
+  box-sizing: border-box;
 }
+.input.pl-10 { padding-left: 2.5rem; }
+.input.pr-10 { padding-right: 2.5rem; }
 .input::placeholder { color: var(--muted); }
 .input:focus        { border-color: var(--muted); }
 

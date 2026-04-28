@@ -13,6 +13,7 @@ import { AI } from './pages/AI'
 import { Settings } from './pages/Settings'
 import { Drive } from './pages/Drive'
 import { Todos } from './pages/Todos'
+import { Reminders } from './pages/Reminders'
 
 // ── Loading screen ────────────────────────────────────
 function LoadingScreen() {
@@ -47,8 +48,9 @@ function AppInner({ user, isDemoMode, onSignOut, isDark, toggleDark }) {
           <Route path="/notes" element={<Notes userId={user?.id} isDemoMode={isDemoMode} />} />
           <Route path="/goals" element={<Goals userId={user?.id} isDemoMode={isDemoMode} />} />
           <Route path="/todos" element={<Todos />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/health" element={<Health />} />
+          <Route path="/alarm" element={<Reminders userId={user?.id} isDemoMode={isDemoMode} />} />
+          <Route path="/expenses" element={<Expenses userId={user?.id} isDemoMode={isDemoMode} />} />
+          <Route path="/health" element={<Health userId={user?.id} isDemoMode={isDemoMode} />} />
           <Route path="/drive" element={<Drive />} />
           <Route path="/ai" element={<AI user={user} notes={[]} goals={[]} />} />
           <Route path="/settings" element={<Settings />} />

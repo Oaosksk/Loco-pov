@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-// const LS_CACHE = 'loco_health_cache'
+const LS_CACHE = 'loco_health_cache'
 
 export function useHealth({ userId, isDemoMode } = {}) {
   const [logs, setLogs] = useState([])

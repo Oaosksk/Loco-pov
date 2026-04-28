@@ -24,12 +24,12 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
     try {
       if (isSignUp) {
         await onEmailSignUp(email, password)
-        setError('Check your email to confirm your account.')
+        setError('✓ Check your email to confirm your account. Click the verification link to complete signup.')
       } else {
         await onEmailSignIn(email, password)
       }
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'An error occurred. Please try again.')
     } finally {
       setEmailLoading(false)
     }
@@ -180,7 +180,7 @@ export function AuthScreen({ onSignIn, onEmailSignIn, onEmailSignUp, loading }) 
           />
 
           {error && (
-            <p style={{ fontSize: '0.75rem', color: error.startsWith('Check') ? '#3FB950' : '#F85149', margin: '0.1rem 0' }}>
+            <p style={{ fontSize: '0.75rem', color: error.startsWith('✓') ? '#3FB950' : '#F85149', margin: '0.1rem 0', lineHeight: '1.4' }}>
               {error}
             </p>
           )}
