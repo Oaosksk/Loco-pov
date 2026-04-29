@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react'
 import { useExpenses } from '../hooks/useExpenses'
 import { useSubscriptions } from '../hooks/useSubscriptions'
+import { useMonthlyBudget } from '../hooks/useMonthlyBudget'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/Button'
 import { Sheet } from '../components/ui/Sheet'
 import {
-  Plus, Trash2, Download, Filter, TrendingUp,
+  Plus, Trash2, Download, Pencil, Check, X,
   CreditCard, RefreshCw, AlertCircle,
 } from 'lucide-react'
 import jsPDF from 'jspdf'
@@ -188,6 +189,106 @@ function AddSubSheet({ open, onClose, onAdd }) {
   )
 }
 
+function BudgetBanner({ monthTotal, userId, isDemoMode }) {
+  const now = new Date()
+  const { budget, loading, saveBudget } = useMonthlyBudget({ userId, isDemoMode })
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const pct = budget > 0 ? Math.min(Math.round((monthTotal / budget) * 100), 100) : 0
+  const remaining = budget - monthTotal
+  const monthLabel = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+
+  const handleSave = () => {
+    saveBudget(draft)
+    setEditing(false)
+  }
+
+  const barColor = pct >= 90 ? '#f85149' : pct >= 70 ? '#fb923c' : '#a78bfa'
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #1e1b4b 0%, #2d1f5e 100%)',
+      border: '0.5px solid #3b2f7a',
+      borderRadius: '1rem',
+      padding: '1.25rem 1.5rem',
+    }}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p style={{ fontSize: '0.75rem', color: '#a5b4fc', fontWeight: 600, marginBottom: '0.25rem' }}>Spent this month</p>
+          <p style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>
+            ₹{monthTotal.toLocaleString('en-IN')}
+          </p>
+        </div>
+        <div className="text-right">
+          <p style={{ fontSize: '0.7rem', color: '#a5b4fc', fontWeight: 600 }}>Monthly budget</p>
+          {editing ? (
+            <div className="flex items-center gap-1 mt-1">
+              <input
+                autoFocus
+                type="number"
+                min="0"
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
+                style={{
+                  width: '7rem', background: '#2d1f5e', border: '1px solid #6d28d9',
+                  borderRadius: '0.5rem', padding: '0.25rem 0.5rem',
+                  color: '#fff', fontSize: '0.875rem', textAlign: 'right',
+                }}
+              />
+              <button onClick={handleSave} style={{ color: '#4ade80' }}><Check size={14} /></button>
+              <button onClick={() => setEditing(false)} style={{ color: '#f85149' }}><X size={14} /></button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 justify-end mt-1">
+              <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0' }}>
+                {budget > 0 ? `₹${budget.toLocaleString('en-IN')}` : 'Not set'}
+              </p>
+              <button
+                onClick={() => { setDraft(budget || ''); setEditing(true) }}
+                style={{ color: '#a5b4fc', opacity: 0.7 }}
+                title="Update budget"
+              >
+                <Pencil size={12} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {budget > 0 && (
+        <>
+          <div style={{
+            margin: '1rem 0 0.5rem',
+            height: '6px', borderRadius: '999px',
+            background: 'rgba(255,255,255,0.1)', overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%', borderRadius: '999px',
+              width: `${pct}%`,
+              background: barColor,
+              transition: 'width 0.5s ease',
+            }} />
+          </div>
+          <div className="flex justify-between">
+            <span style={{ fontSize: '0.7rem', color: '#a5b4fc' }}>{pct}% used</span>
+            <span style={{ fontSize: '0.7rem', color: remaining < 0 ? '#f85149' : '#a5b4fc' }}>
+              {remaining < 0 ? `₹${Math.abs(remaining).toLocaleString('en-IN')} over` : `₹${remaining.toLocaleString('en-IN')} remaining`}
+            </span>
+          </div>
+        </>
+      )}
+
+      {!budget && !loading && (
+        <p style={{ fontSize: '0.7rem', color: '#a5b4fc', marginTop: '0.75rem' }}>
+          Set a monthly budget to track your spending limit.
+        </p>
+      )}
+    </div>
+  )
+}
+
 export function Expenses({ userId, isDemoMode }) {
   const { expenses, loading, addExpense, deleteExpense, getMonthTotal, getWeekTotal, getCategoryBreakdown } = useExpenses({ userId, isDemoMode })
   const { subscriptions, addSubscription, deleteSubscription, getMonthlyTotal, getDaysUntilRenewal } = useSubscriptions({ userId, isDemoMode })
@@ -280,6 +381,8 @@ export function Expenses({ userId, isDemoMode }) {
           </Button>
         </div>
       </div>
+
+      <BudgetBanner monthTotal={monthTotal} userId={userId} isDemoMode={isDemoMode} />
 
       <div className="grid grid-cols-3 gap-3">
         <div className="card p-4 text-center">

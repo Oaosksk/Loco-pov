@@ -79,24 +79,104 @@ create table if not exists health_logs (
   value           numeric,
   unit            text default '',
   note            text default '',
+  custom_label    text default '',
   date            date not null default current_date,
   created_at      timestamptz default now()
 );
 alter table health_logs enable row level security;
 create policy "health_logs: own rows" on health_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- ─── reminders ───────────────────────────────────────────────────────────────
-create table if not exists reminders (
+-- ─── habits ──────────────────────────────────────────────────────────────────
+-- Stores user-defined habits with their scheduled days (Mon=0 … Sun=6)
+create table if not exists habits (
   id              uuid primary key default gen_random_uuid(),
   user_id         uuid not null references auth.users(id) on delete cascade,
-  note_entry_id   uuid references note_entries(id) on delete set null,
-  title           text not null,
-  remind_at       timestamptz,
-  push_sent       boolean default false,
+  name            text not null,
+  scheduled_days  boolean[] not null default '{false,false,false,false,false,false,false}',
   created_at      timestamptz default now()
 );
+alter table habits enable row level security;
+create policy "habits: own rows" on habits for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ─── habit_checks ────────────────────────────────────────────────────────────
+-- One row per habit per day-index per week when the user marks it done
+create table if not exists habit_checks (
+  id           uuid primary key default gen_random_uuid(),
+  habit_id     uuid not null references habits(id) on delete cascade,
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  checked_day  int  not null check (checked_day between 0 and 6), -- 0=Mon … 6=Sun
+  week_start   date not null, -- Monday of the ISO week
+  created_at   timestamptz default now(),
+  unique (habit_id, week_start, checked_day)
+);
+alter table habit_checks enable row level security;
+create policy "habit_checks: own rows" on habit_checks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ─── reminders / alarms ─────────────────────────────────────────────────────
+create table if not exists reminders (
+  id                uuid primary key default gen_random_uuid(),
+  user_id           uuid not null references auth.users(id) on delete cascade,
+  note_entry_id     uuid references note_entries(id) on delete set null,
+  goal_id           uuid references goals(id) on delete set null,
+
+  -- core
+  title             text not null,
+  description       text default '',
+  remind_at         timestamptz not null,
+
+  -- alarm vs reminder
+  type              text default 'reminder' check (type in ('reminder', 'alarm')),
+
+  -- recurrence
+  recurrence        text default 'none' check (recurrence in ('none','daily','weekly','monthly','yearly')),
+  recurrence_days   int[] default '{}',          -- e.g. {1,3,5} for Mon/Wed/Fri
+  recurrence_end    date,                        -- stop repeating after this date
+
+  -- snooze
+  snoozed_until     timestamptz,
+  snooze_count      int default 0,
+
+  -- status
+  status            text default 'pending' check (status in ('pending','dismissed','completed')),
+  push_sent         boolean default false,
+
+  created_at        timestamptz default now(),
+  updated_at        timestamptz default now()
+);
+
+create index if not exists reminders_user_remind_at on reminders (user_id, remind_at);
+create index if not exists reminders_status on reminders (status) where status = 'pending';
+
 alter table reminders enable row level security;
 create policy "reminders: own rows" on reminders for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- auto-update updated_at
+create or replace function update_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end;
+$$;
+
+create trigger reminders_updated_at
+  before update on reminders
+  for each row execute procedure update_updated_at();
+
+-- ─── monthly_budgets ────────────────────────────────────────────────────────
+create table if not exists monthly_budgets (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  year       int not null,
+  month      int not null check (month between 1 and 12),
+  budget     numeric not null default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (user_id, year, month)
+);
+alter table monthly_budgets enable row level security;
+create policy "monthly_budgets: own rows" on monthly_budgets for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create trigger monthly_budgets_updated_at
+  before update on monthly_budgets
+  for each row execute procedure update_updated_at();
 
 -- ─── subscriptions ───────────────────────────────────────────────────────────
 create table if not exists subscriptions (

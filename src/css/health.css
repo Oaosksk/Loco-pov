@@ -1,200 +1,462 @@
-.health-page {
+/* ── Health page — Emerald Deep Forest theme ─────────────────────────────── */
+
+.hpage {
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    #0b1e18 0%,
+    #0f2a22 25%,
+    #081310 60%,
+    #06080a 100%
+  );
+  padding: 1.25rem 1rem 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  font-family: var(--font-sans);
+  color: #e0ede6;
 }
 
-.health-streaks-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+/* ── Header ── */
+.hheader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 0.5rem;
 }
-
-.health-streak-card {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 0.75rem;
-  text-align: center;
-}
-.health-streak-card__emoji {
-  font-size: 1.5rem;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-.health-streak-card__value {
+.hheader-title {
   font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: var(--text);
+  color: #e8f5ee;
+  margin: 0;
+  line-height: 1.1;
 }
-.health-streak-card__metric {
-  font-size: 0.625rem;
-  color: var(--muted);
-  font-weight: 600;
-  text-transform: capitalize;
-}
-.health-streak-card__unit {
-  font-size: 0.625rem;
-  color: var(--muted);
+.hheader-sub {
+  font-size: 0.78rem;
+  color: #5a8a6a;
+  margin: 0.2rem 0 0;
 }
 
-.health-trend-card {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
+/* ── Log today button ── */
+.hbtn-log {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #2dd4a0;
+  border-radius: 10px;
+  background: transparent;
+  color: #2dd4a0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  font-family: var(--font-sans);
 }
-.health-trend-header {
+.hbtn-log:hover {
+  background: rgba(45, 212, 160, 0.1);
+  box-shadow: 0 0 12px rgba(45, 212, 160, 0.25);
+}
+
+/* ── Floating metric menu ── */
+.hlog-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  background: #0f2318;
+  border: 1px solid #1e3d2a;
+  border-radius: 14px;
+  padding: 0.5rem;
+  min-width: 170px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  animation: hMenuIn 0.15s ease;
+}
+@keyframes hMenuIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hlog-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: #c8e6d4;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 9px;
+  transition: background 0.12s;
+  font-family: var(--font-sans);
+  text-align: left;
+}
+.hlog-menu-item:hover { background: rgba(45, 212, 160, 0.12); }
+
+/* ── Inline log form ── */
+.hlog-form {
+  background: #0f2318;
+  border: 1px solid #1e3d2a;
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  animation: hMenuIn 0.18s ease;
+}
+.hlog-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #c8e6d4;
+}
+.hlog-form-close {
+  background: none;
+  border: none;
+  color: #5a8a6a;
+  cursor: pointer;
+  display: flex;
+  padding: 2px;
+}
+.hlog-form-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.hlog-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+.hinput {
+  flex: 1;
+  padding: 0.5rem 0.7rem;
+  background: #0a1a12;
+  border: 1px solid #1e3d2a;
+  border-radius: 9px;
+  color: #e0ede6;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.hinput:focus { border-color: #2dd4a0; }
+.hinput::placeholder { color: #3a6a4a; }
+.hbtn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 1rem;
+  background: #2dd4a0;
+  color: #071510;
+  border: none;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: opacity 0.15s;
+}
+.hbtn-primary:hover { opacity: 0.88; }
+.hbtn-ghost {
+  padding: 0.45rem 0.9rem;
+  background: transparent;
+  color: #5a8a6a;
+  border: 1px solid #1e3d2a;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color 0.15s;
+}
+.hbtn-ghost:hover { color: #c8e6d4; }
+
+/* ── Progress rings grid ── */
+.hrings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.hring-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 1.1rem 0.5rem 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --hring-bg: #0d1a14;
+}
+.hring-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.hring-center {
+  position: absolute;
+  inset: 11px;
+  border-radius: 50%;
+  background: var(--hring-bg, #0f1e18);
+}
+.hring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.hring-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-family: var(--font-serif);
+}
+.hring-sub {
+  font-size: 0.6rem;
+  color: #5a8a6a;
+  text-align: center;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+/* ── Habit tracker ── */
+.hhabit-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px;
+  padding: 1rem 1rem 1.1rem;
+}
+.hhabit-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.75rem;
 }
-.health-trend-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.health-trend-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text);
-}
-.health-trend-select {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  background: var(--surface);
-  color: var(--text);
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius-md);
-  outline: none;
-  font-family: var(--font-sans);
-  cursor: pointer;
-}
-
-.health-mini-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.25rem;
-  height: 4rem;
-}
-.health-mini-chart__bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  height: 100%;
-  justify-content: flex-end;
-}
-.health-mini-chart__bar {
-  width: 100%;
-  border-radius: 2px 2px 0 0;
-  background: var(--muted);
-  transition: height 0.5s ease;
-  min-height: 2px;
-}
-.health-mini-chart__label {
-  font-size: 0.5rem;
-  color: var(--muted);
-}
-
-.health-log-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-.health-log-day-header {
-  font-family: var(--font-serif);
-  font-size: 0.875rem;
+.hhabit-heading {
+  font-size: 0.65rem;
   font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+  color: #4a7a5a;
+  margin: 0;
+  text-transform: uppercase;
 }
-.health-log-day-entries {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.health-log-entry {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-.health-log-entry__icon-wrap {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: var(--radius-lg);
-  background: var(--border);
+.hhabit-add-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid #1e3d2a;
+  background: transparent;
+  color: #2dd4a0;
+  cursor: pointer;
+  transition: background 0.12s;
 }
-.health-log-entry__icon { color: var(--text); }
-.health-log-entry__body { flex: 1; min-width: 0; }
-.health-log-entry__title-row {
+.hhabit-add-btn:hover { background: rgba(45,212,160,0.12); }
+.hhabit-days-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 0.6rem;
 }
-.health-log-entry__metric {
-  font-size: 0.875rem;
+.hhabit-name-spacer { flex: 0 0 85px; }
+.hhabit-remove-spacer { flex: 0 0 223px; }
+.hhabit-day-label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.80rem;
+  color: #4a7a5a;
   font-weight: 600;
-  color: var(--text);
+}
+.hhabit-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.55rem;
+}
+.hhabit-name {
+  flex: 0 0 90px;
+  font-size: 0.82rem;
+  color: #c8e6d4;
+  font-weight: 500;
   text-transform: capitalize;
-}
-.health-log-entry__value {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text);
-}
-.health-log-entry__note {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 0.125rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.health-log-entry__delete {
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-  color: #f85149;
-  flex-shrink: 0;
-}
-.health-log-entry:hover .health-log-entry__delete { opacity: 1; }
-
-.health-metric-pills {
+.hhabit-days {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex: 1;
+  gap: 5px;
 }
-.health-metric-pill {
-  padding: 0.375rem 0.75rem;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: capitalize;
+.hhabit-cell {
+  flex: 1;
+  aspect-ratio: 1;
+  max-width: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  transition: background 0.15s;
+}
+.hhabit-cell--on {
+  background: #2dd4a0;
+  box-shadow: 0 0 6px rgba(45,212,160,0.4);
+}
+.hhabit-cell--off {
+  background: rgba(255,255,255,0.02);
+  opacity: 0.3;
+}
+.hhabit-remove {
+  flex: 0 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #2a5a3a;
   cursor: pointer;
-  border: 0.5px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  transition: all var(--transition-fast);
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.12s;
+}
+.hhabit-remove:hover { color: #f85149; }
+.hhabit-empty {
+  font-size: 0.78rem;
+  color: #3a6a4a;
+  margin: 0.5rem 0 0;
+}
+
+/* Add habit form */
+.hhabit-addform {
+  background: #0a1a12;
+  border: 1px solid #1e3d2a;
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  animation: hMenuIn 0.15s ease;
+}
+.hhabit-addform-days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.hhabit-addform-label {
+  font-size: 0.7rem;
+  color: #4a7a5a;
+  font-weight: 600;
+}
+.hhabit-addform-daypills {
+  display: flex;
+  gap: 5px;
+}
+.hhabit-daypill {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid #1e3d2a;
+  background: rgba(255,255,255,0.04);
+  color: #5a8a6a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
   font-family: var(--font-sans);
 }
-.health-metric-pill--active {
-  background: var(--border);
-  color: var(--text);
-  box-shadow: 0 0 0 2px rgba(230, 237, 243, 0.15);
+.hhabit-daypill--on {
+  background: #2dd4a0;
+  color: #071510;
+  border-color: #2dd4a0;
 }
 
-@media (max-width: 360px) {
-  .health-streaks-grid { grid-template-columns: repeat(2, 1fr); }
+/* ── Today's log entries ── */
+.hentries {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px;
+  padding: 1rem;
+}
+.hentries-heading {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #4a7a5a;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+.hentry {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.hentry:last-child { border-bottom: none; }
+.hentry-emoji { font-size: 1.1rem; flex-shrink: 0; }
+.hentry-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.hentry-metric {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #c8e6d4;
+  text-transform: capitalize;
+}
+.hentry-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2dd4a0;
+}
+.hentry-note {
+  font-size: 0.75rem;
+  color: #4a7a5a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hentry-edit, .hentry-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.hentry-edit { color: #4a7a5a; }
+.hentry-edit:hover { background: rgba(45,212,160,0.12); color: #2dd4a0; }
+.hentry-del  { color: #4a7a5a; }
+.hentry-del:hover  { background: rgba(248,81,73,0.12); color: #f85149; }
+
+/* ── Footer ── */
+.hfooter {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #2a5a3a;
+  margin-top: 0.5rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 380px) {
+  .hrings-grid { gap: 0.5rem; }
+  .hring-card  { padding: 0.75rem 0.25rem; }
+  .hring-value { font-size: 0.85rem; }
+  .hhabit-name { flex: 0 0 72px; font-size: 0.75rem; }
 }

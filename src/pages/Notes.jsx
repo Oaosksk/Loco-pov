@@ -19,7 +19,7 @@ const TYPE_LABEL = {
   upload:       '📎 File',
 }
 
-function NoteCard({ entry, onEdit, onDelete }) {
+function NoteCard({ entry, onEdit, onDelete, onClick }) {
   const [showMenu, setShowMenu]   = useState(false)
   const [editing, setEditing]     = useState(false)
   const [editText, setEditText]   = useState(entry.raw_text)
@@ -34,12 +34,12 @@ function NoteCard({ entry, onEdit, onDelete }) {
   }
 
   return (
-    <div className="card p-4 group relative">
+    <div className="card p-4 group relative cursor-pointer" onClick={() => !editing && onClick && onClick()}>
       <div className="flex items-start justify-between gap-2 mb-2">
         <span className="tag">{label}</span>
         <div className="relative flex-shrink-0">
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu) }}
             className="btn-icon w-6 h-6 opacity-0 group-hover:opacity-100"
           >
             <MoreVertical size={13} />
@@ -51,7 +51,7 @@ function NoteCard({ entry, onEdit, onDelete }) {
                             rounded-xl shadow-card-dark overflow-hidden"
                  style={{ borderWidth: '0.5px' }}>
               <button
-                onClick={() => { setEditing(true); setShowMenu(false) }}
+                onClick={(e) => { e.stopPropagation(); setEditing(true); setShowMenu(false) }}
                 className="w-full text-left px-3 py-2.5 text-xs flex items-center gap-2
                            text-text-light dark:text-text-dark
                            hover:bg-bg-light dark:hover:bg-bg-dark"
@@ -59,7 +59,7 @@ function NoteCard({ entry, onEdit, onDelete }) {
                 <Edit3 size={12} /> Edit
               </button>
               <button
-                onClick={() => { onDelete(entry.id); setShowMenu(false) }}
+                onClick={(e) => { e.stopPropagation(); onDelete(entry.id); setShowMenu(false) }}
                 className="w-full text-left px-3 py-2.5 text-xs flex items-center gap-2
                            text-muted-light dark:text-muted-dark
                            hover:bg-bg-light dark:hover:bg-bg-dark"
@@ -108,12 +108,12 @@ function NoteCard({ entry, onEdit, onDelete }) {
   )
 }
 
-function FolderCard({ type, count, onClick, heightClass = 'h-32' }) {
+function FolderCard({ type, count, onClick }) {
   const label = TYPE_LABEL[type] || '📝 Note'
   return (
     <button
       onClick={onClick}
-      className={`card p-4 text-left hover:border-muted-dark dark:hover:border-muted-dark transition-colors w-full flex flex-col justify-between ${heightClass}`}
+      className="card p-4 text-left hover:border-muted-dark dark:hover:border-muted-dark transition-colors w-full flex flex-col justify-between h-32"
     >
       <FileText size={20} className="text-muted-light dark:text-muted-dark" />
       <div>
@@ -190,6 +190,7 @@ export function Notes({ userId, isDemoMode }) {
   const [search, setSearch]         = useState('')
   const [filterType, setFilterType] = useState('all')
   const [viewMode, setViewMode]     = useState('folders')
+  const [viewNote, setViewNote]     = useState(null)
   const helpRef = useRef(null)
 
   useEffect(() => {
@@ -349,30 +350,22 @@ export function Notes({ userId, isDemoMode }) {
           </p>
         </div>
       ) : viewMode === 'folders' ? (
-        <div style={{ columns: 2, gap: '0.75rem' }}>
-          {Object.keys(folderGroups).map((type, i) => {
-            const sizes = ['h-24','h-32','h-28','h-36','h-40','h-28','h-32','h-24']
-            const h = sizes[i % sizes.length]
-            return (
-              <div key={type} style={{ breakInside: 'avoid', marginBottom: '0.75rem' }}>
-                <FolderCard
-                  type={type}
-                  count={folderGroups[type].length}
-                  onClick={() => { setFilterType(type); setViewMode('all') }}
-                  heightClass={h}
-                />
-              </div>
-            )
-          })}
-          <div style={{ breakInside: 'avoid', marginBottom: '0.75rem' }}>
-            <button
-              onClick={() => setShowAdd(true)}
-              className="card p-4 flex flex-col items-center justify-center gap-2 border-dashed hover:border-muted-dark dark:hover:border-muted-dark transition-colors w-full h-32"
-            >
-              <FolderPlus size={20} className="text-muted-light dark:text-muted-dark" />
-              <span className="text-xs text-muted-light dark:text-muted-dark">New entry</span>
-            </button>
-          </div>
+        <div className="grid grid-cols-2 gap-3">
+          {Object.keys(folderGroups).map((type) => (
+            <FolderCard
+              key={type}
+              type={type}
+              count={folderGroups[type].length}
+              onClick={() => { setFilterType(type); setViewMode('all') }}
+            />
+          ))}
+          <button
+            onClick={() => setShowAdd(true)}
+            className="card p-4 flex flex-col items-center justify-center gap-2 border-dashed hover:border-muted-dark dark:hover:border-muted-dark transition-colors"
+          >
+            <FolderPlus size={20} className="text-muted-light dark:text-muted-dark" />
+            <span className="text-xs text-muted-light dark:text-muted-dark">New entry</span>
+          </button>
         </div>
       ) : (
         <div>
@@ -389,16 +382,47 @@ export function Notes({ userId, isDemoMode }) {
               No entries found.
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {filtered.map(entry => (
-                <NoteCard key={entry.id} entry={entry} onEdit={editEntry} onDelete={deleteEntry} />
-              ))}
+            <div style={{ columns: 2, gap: '0.75rem' }}>
+              {filtered.map((entry, i) => {
+                const heights = ['auto', 'auto', 'auto', 'auto', 'auto']
+                const minHeights = ['120px', '140px', '100px', '160px', '130px', '110px', '150px', '125px']
+                const minH = minHeights[i % minHeights.length]
+                return (
+                  <div key={entry.id} style={{ breakInside: 'avoid', marginBottom: '0.75rem', minHeight: minH }}>
+                    <NoteCard entry={entry} onEdit={editEntry} onDelete={deleteEntry} onClick={() => handleViewNote(entry)} />
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
       )}
 
       <AddNoteSheet open={showAdd} onClose={() => setShowAdd(false)} onAdd={handleAddNote} />
+
+      {/* View Note Sheet */}
+      {viewNote && (
+        <Sheet open={!!viewNote} onClose={() => setViewNote(null)} title="View Note">
+          <div className="space-y-4">
+            <div>
+              <span className="tag">{TYPE_LABEL[viewNote.parsed_type] || '📝 Note'}</span>
+            </div>
+            <div>
+              <p className="text-sm text-text-light dark:text-text-dark leading-relaxed whitespace-pre-wrap">
+                {viewNote.raw_text}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-muted-light dark:text-muted-dark pt-4 border-t border-border-light dark:border-border-dark">
+              <span>
+                {new Date(viewNote.entry_time).toLocaleString('en-GB', {
+                  day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                })}
+              </span>
+              {viewNote.is_edited && <span className="italic opacity-70">(edited)</span>}
+            </div>
+          </div>
+        </Sheet>
+      )}
 
       {/* FAB */}
       <button
@@ -417,5 +441,9 @@ export function Notes({ userId, isDemoMode }) {
 
   function handleAddNote(text) {
     addEntry(text)
+  }
+
+  function handleViewNote(entry) {
+    setViewNote(entry)
   }
 }

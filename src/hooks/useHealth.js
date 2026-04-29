@@ -66,13 +66,14 @@ export function useHealth({ userId, isDemoMode } = {}) {
     fetchLogs()
   }, [fetchLogs])
 
-  const addLog = useCallback(async ({ metric, value, unit, note, date }) => {
+  const addLog = useCallback(async ({ metric, value, unit, note, date, customLabel }) => {
     const newLog = {
       id: crypto.randomUUID(),
       metric: metric || 'custom',
       value: value ? Number(value) : null,
       unit: unit || '',
       note: note || '',
+      customLabel: customLabel || '',
       date: date || new Date().toISOString().split('T')[0],
       created_at: new Date().toISOString(),
       user_id: userId,
@@ -93,6 +94,7 @@ export function useHealth({ userId, isDemoMode } = {}) {
           value: newLog.value,
           unit: newLog.unit,
           note: newLog.note,
+          custom_label: newLog.customLabel,
           date: newLog.date,
         })
         .select()

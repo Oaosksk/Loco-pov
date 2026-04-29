@@ -1,246 +1,360 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { useHealth } from '../hooks/useHealth'
-import { useAuth } from '../hooks/useAuth'
-import { Button } from '../components/ui/Button'
-import { Sheet } from '../components/ui/Sheet'
-import { Plus, Trash2, Flame, TrendingUp, Activity, Heart, Droplets, Moon, Footprints, Brain, Scale } from 'lucide-react'
+import { Plus, X, Pencil, Check, ChevronDown } from 'lucide-react'
 
-const METRIC_CONFIG = {
-  workout: { icon: Activity, color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '🏋️' },
-  weight:  { icon: Scale,    color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '⚖️' },
-  sleep:   { icon: Moon,     color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '🌙' },
-  steps:   { icon: Footprints,color:'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '👣' },
-  water:   { icon: Droplets, color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '💧' },
-  mood:    { icon: Brain,    color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '😊' },
-  custom:  { icon: Heart,    color: 'text-text-light dark:text-text-dark', bg: 'bg-border-light dark:bg-border-dark', emoji: '❤️' },
+// ── Metric config ────────────────────────────────────────────────────────────
+const METRICS = [
+  { key: 'workout',  emoji: '🏋️', label: 'Workout',  unit: 'min',   defaultVal: 30  },
+  { key: 'weight',   emoji: '⚖️', label: 'Weight',   unit: 'kg',    defaultVal: 70  },
+  { key: 'sleep',    emoji: '🌙', label: 'Sleep',    unit: 'hrs',   defaultVal: 8   },
+  { key: 'steps',    emoji: '👣', label: 'Steps',    unit: 'steps', defaultVal: 8000},
+  { key: 'water',    emoji: '💧', label: 'Water',    unit: 'L',     defaultVal: 2   },
+  { key: 'mood',     emoji: '😊', label: 'Mood',     unit: '/10',   defaultVal: 7   },
+  { key: 'custom',   emoji: '✨', label: 'Custom',   unit: '',      defaultVal: 1   },
+]
+
+// ── Ring progress (conic-gradient) ──────────────────────────────────────────
+const RING_CONFIGS = {
+  steps: {
+    main: '#2FAA7D',
+    conic: (deg) => `conic-gradient(#35c994 0deg, #2faa7d ${deg}deg, #12201d ${deg}deg)`,
+    maxDeg: 220,
+  },
+  sleep: {
+    main: '#4F86C5',
+    conic: (deg) => `conic-gradient(#5ea2ff 0deg, #4f86c5 ${deg}deg, #10191d ${deg}deg)`,
+    maxDeg: 230,
+  },
+  water: {
+    main: '#8470C3',
+    conic: (deg) => `conic-gradient(#9d83ff 0deg, #8470c3 ${deg}deg, #101418 ${deg}deg)`,
+    maxDeg: 210,
+  },
 }
 
-function formatDayHeader(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00')
-  const today = new Date().toISOString().split('T')[0]
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+function Ring({ type, value, max, size = 110, stroke = 11, label, sub }) {
+  const cfg = RING_CONFIGS[type]
+  const pct = Math.min(value / max, 1)
+  const deg = pct * cfg.maxDeg
 
-  if (dateStr === today) return '📅 Today'
-  if (dateStr === yesterday) return '📅 Yesterday'
-  return `📅 ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
-}
-
-function StreakCard({ metric, streak }) {
-  const config = METRIC_CONFIG[metric] || METRIC_CONFIG.custom
   return (
-    <div className="card p-3 text-center">
-      <span className="text-2xl block mb-1">{config.emoji}</span>
-      <p className={`text-xl font-bold font-serif ${config.color}`}>{streak}</p>
-      <p className="text-[10px] text-muted-light dark:text-muted-dark font-semibold capitalize">{metric}</p>
-      <p className="text-[10px] text-muted-light dark:text-muted-dark">day streak</p>
+    <div className="hring-wrap" style={{ width: size, height: size }}>
+      {/* Conic ring */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        borderRadius: '50%',
+        background: cfg.conic(deg),
+        transition: 'background 0.6s ease',
+      }} />
+      {/* Cut-out center */}
+      <div className="hring-center" />
+      <div className="hring-label">
+        <span className="hring-value" style={{ color: cfg.main }}>{label}</span>
+        <span className="hring-sub">{sub}</span>
+      </div>
     </div>
   )
 }
 
-function MiniChart({ data }) {
-  if (!data || data.length === 0) return null
-  const max = Math.max(...data.map(d => d.value), 1)
-  
+// ── Habit tracker ────────────────────────────────────────────────────────────
+const DAYS = ['M','T','W','T','F','S','S']
+const LS_HABITS = 'loco_habits_v1'
+
+function loadHabits() {
+  try { return JSON.parse(localStorage.getItem(LS_HABITS)) || [] } catch { return [] }
+}
+function saveHabits(h) { localStorage.setItem(LS_HABITS, JSON.stringify(h)) }
+
+// habit shape: { id, name, scheduledDays: [0-6 booleans], checked: [0-6 booleans] }
+function useHabits() {
+  const [habits, setHabits] = useState(loadHabits)
+  const update = (next) => { setHabits(next); saveHabits(next) }
+
+  const addHabit = (name, scheduledDays) => {
+    update([...habits, { id: crypto.randomUUID(), name, scheduledDays, checked: Array(7).fill(false) }])
+  }
+  const removeHabit = (id) => update(habits.filter(h => h.id !== id))
+  const toggleCheck = (id, dayIdx) => {
+    update(habits.map(h => h.id !== id ? h : {
+      ...h, checked: h.checked.map((v, i) => i === dayIdx ? !v : v)
+    }))
+  }
+  const toggleSchedule = (id, dayIdx) => {
+    update(habits.map(h => h.id !== id ? h : {
+      ...h, scheduledDays: h.scheduledDays.map((v, i) => i === dayIdx ? !v : v)
+    }))
+  }
+  return { habits, addHabit, removeHabit, toggleCheck, toggleSchedule }
+}
+
+function AddHabitForm({ onAdd, onCancel }) {
+  const [name, setName] = useState('')
+  const [days, setDays] = useState(Array(7).fill(false))
+  const toggle = i => setDays(d => d.map((v, j) => j === i ? !v : v))
   return (
-    <div className="flex items-end gap-1 h-16">
-      {data.map((d, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <div
-            className="w-full rounded-t bg-muted-light dark:bg-muted-dark transition-all duration-500 min-h-[2px]"
-            style={{ height: `${Math.max((d.value / max) * 100, 4)}%` }}
-          />
-          <span className="text-[8px] text-muted-light dark:text-muted-dark">{d.label}</span>
+    <div className="hhabit-addform">
+      <input className="hinput" placeholder="Habit name (e.g. Exercise)" value={name}
+        onChange={e => setName(e.target.value)} autoFocus />
+      <div className="hhabit-addform-days">
+        <span className="hhabit-addform-label">Schedule days:</span>
+        <div className="hhabit-addform-daypills">
+          {DAYS.map((d, i) => (
+            <button key={i} type="button"
+              className={`hhabit-daypill ${days[i] ? 'hhabit-daypill--on' : ''}`}
+              onClick={() => toggle(i)}>{d}</button>
+          ))}
         </div>
-      ))}
+      </div>
+      <div className="hlog-form-actions">
+        <button className="hbtn-ghost" onClick={onCancel}>Cancel</button>
+        <button className="hbtn-primary" onClick={() => { if (name.trim()) { onAdd(name.trim(), days); onCancel() } }}>
+          <Check size={14}/> Add
+        </button>
+      </div>
     </div>
   )
 }
 
-function AddHealthSheet({ open, onClose, onAdd }) {
-  const [metric, setMetric] = useState('workout')
-  const [value, setValue] = useState('')
-  const [unit, setUnit] = useState('min')
-  const [note, setNote] = useState('')
+function HabitRow({ habit, onToggle, onRemove }) {
+  return (
+    <div className="hhabit-row">
+      <span className="hhabit-name">{habit.name}</span>
+      <div className="hhabit-days">
+        {DAYS.map((_, i) => {
+          const scheduled = habit.scheduledDays[i]
+          const checked   = habit.checked[i]
+          return (
+            <div key={i}
+              className={`hhabit-cell ${
+                !scheduled ? 'hhabit-cell--off' :
+                checked    ? 'hhabit-cell--on'  : ''
+              }`}
+              onClick={() => scheduled && onToggle(habit.id, i)}
+              style={{ cursor: scheduled ? 'pointer' : 'default' }}
+            />
+          )
+        })}
+      </div>
+      <button className="hhabit-remove" onClick={() => onRemove(habit.id)} title="Remove habit">
+        <X size={11}/>
+      </button>
+    </div>
+  )
+}
 
-  const reset = () => { setMetric('workout'); setValue(''); setUnit('min'); setNote('') }
+// ── Log form (inline floating) ───────────────────────────────────────────────
+function LogForm({ metric, onSave, onCancel, initial }) {
+  const m = METRICS.find(x => x.key === metric) || METRICS[6]
+  const [value, setValue] = useState(initial?.value ?? m.defaultVal)
+  const [unit, setUnit]   = useState(initial?.unit  ?? m.unit)
+  const [note, setNote]   = useState(initial?.note  ?? '')
+  const [customLabel, setCustomLabel] = useState(initial?.customLabel ?? '')
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onAdd({ metric, value: value ? Number(value) : null, unit, note, date: new Date().toISOString().split('T')[0] })
-    reset()
-    onClose()
+  return (
+    <div className="hlog-form">
+      <div className="hlog-form-header">
+        <span>{m.emoji} {metric === 'custom' && customLabel ? customLabel : m.label}</span>
+        <button className="hlog-form-close" onClick={onCancel}><X size={14}/></button>
+      </div>
+      {metric === 'custom' && (
+        <input className="hinput" placeholder="Label (e.g. Meditation)" value={customLabel}
+          onChange={e => setCustomLabel(e.target.value)} />
+      )}
+      <div className="hlog-form-row">
+        <input className="hinput" type="number" step="0.1" value={value}
+          onChange={e => setValue(e.target.value)} placeholder="Value" />
+        <input className="hinput" value={unit}
+          onChange={e => setUnit(e.target.value)} placeholder="Unit" style={{ width: 80 }} />
+      </div>
+      <input className="hinput" value={note} onChange={e => setNote(e.target.value)} placeholder="Note (optional)" />
+      <div className="hlog-form-actions">
+        <button className="hbtn-ghost" onClick={onCancel}>Cancel</button>
+        <button className="hbtn-primary" onClick={() => onSave({
+          value: Number(value), unit, note,
+          customLabel: metric === 'custom' ? customLabel : undefined
+        })}>
+          <Check size={14}/> Save
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
+export function Health({ userId, isDemoMode }) {
+  const { logs, loading, addLog, deleteLog, getStreak } = useHealth({ userId, isDemoMode })
+  const { habits, addHabit, removeHabit, toggleCheck } = useHabits()
+
+  const [menuOpen, setMenuOpen]         = useState(false)
+  const [activeMetric, setActiveMetric] = useState(null)
+  const [editingId, setEditingId]       = useState(null)
+  const [showAddHabit, setShowAddHabit] = useState(false)
+  const menuRef = useRef(null)
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handler = e => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const today = new Date().toISOString().split('T')[0]
+
+  // Today's logs
+  const todayLogs = useMemo(() => logs.filter(l => l.date === today), [logs, today])
+
+  // Ring values from today's logs
+  const stepsLog   = todayLogs.find(l => l.metric === 'steps')
+  const sleepLog   = todayLogs.find(l => l.metric === 'sleep')
+  const waterLog   = todayLogs.find(l => l.metric === 'water')
+
+  const stepsVal = stepsLog?.value ?? 0
+  const sleepVal = sleepLog?.value ?? 0
+  const waterVal = waterLog?.value ?? 0
+
+  // Streak for header
+  const workoutStreak = getStreak('workout')
+
+  const handleMetricSelect = (key) => {
+    setMenuOpen(false)
+    setActiveMetric(key)
+    setEditingId(null)
   }
 
-  return (
-    <Sheet open={open} onClose={() => { reset(); onClose() }} title="Log Health">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-2">Metric</label>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(METRIC_CONFIG).map(([key, config]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setMetric(key)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all ${
-                  metric === key
-                    ? `${config.bg} ${config.color} ring-2 ring-current/30`
-                    : 'bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-muted-light dark:text-muted-dark'
-                }`}
-              >
-                {config.emoji} {key}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-1">Value</label>
-            <input type="number" step="0.1" value={value} onChange={e => setValue(e.target.value)} className="input" placeholder="45" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-1">Unit</label>
-            <input value={unit} onChange={e => setUnit(e.target.value)} className="input" placeholder="min, kg, hr..." />
-          </div>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-muted-light dark:text-muted-dark mb-1">Note</label>
-          <input value={note} onChange={e => setNote(e.target.value)} className="input" placeholder="Details..." />
-        </div>
-        <div className="flex gap-3 pt-2">
-          <Button variant="ghost" type="button" onClick={() => { reset(); onClose() }} className="flex-1 justify-center">Cancel</Button>
-          <Button variant="primary" type="submit" className="flex-1 justify-center">Log</Button>
-        </div>
-      </form>
-    </Sheet>
-  )
-}
+  const handleSave = async (data) => {
+    if (editingId) {
+      // delete old + re-add (simple update strategy)
+      await deleteLog(editingId)
+    }
+    await addLog({
+      metric: activeMetric,
+      value: data.value,
+      unit: data.unit,
+      note: data.note,
+      customLabel: data.customLabel,
+      date: today,
+    })
+    setActiveMetric(null)
+    setEditingId(null)
+  }
 
-export function Health({ userId, isDemoMode }) {
-  const { groupedLogs, logs, loading, addLog, deleteLog, getStreak, getWeeklyTrend } = useHealth({ userId, isDemoMode })
-  const [showAdd, setShowAdd] = useState(false)
-  const [selectedMetric, setSelectedMetric] = useState('workout')
+  const handleEdit = (log) => {
+    setEditingId(log.id)
+    setActiveMetric(log.metric)
+  }
 
-  // Get streaks for common metrics
-  const streaks = useMemo(() => {
-    const metrics = ['workout', 'water', 'sleep', 'steps']
-    return metrics.map(m => ({ metric: m, streak: getStreak(m) }))
-  }, [getStreak, logs])
-
-  const weeklyTrend = useMemo(() => getWeeklyTrend(selectedMetric), [selectedMetric, getWeeklyTrend])
+  // Week number within current month (1–4)
+  const weekNum = (() => {
+    const now = new Date()
+    return Math.ceil(now.getDate() / 7)
+  })()
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
+    <div className="hpage">
+      {/* ── Header ── */}
+      <div className="hheader">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold font-serif text-text-light dark:text-text-dark">Health</h1>
-          <p className="text-sm text-muted-light dark:text-muted-dark mt-0.5">
-            {logs.length} log{logs.length !== 1 ? 's' : ''} recorded
-          </p>
+          <h1 className="hheader-title">Health</h1>
+          <p className="hheader-sub">{workoutStreak}-day streak · Week {weekNum}</p>
         </div>
-        <Button variant="primary" onClick={() => setShowAdd(true)}>
-          <Plus size={16} />
-          Log
-        </Button>
+        <div style={{ position: 'relative' }} ref={menuRef}>
+          <button className="hbtn-log" onClick={() => setMenuOpen(v => !v)}>
+            <Plus size={15}/> Log today
+          </button>
+          {menuOpen && (
+            <div className="hlog-menu">
+              {METRICS.map(m => (
+                <button key={m.key} className="hlog-menu-item" onClick={() => handleMetricSelect(m.key)}>
+                  <span>{m.emoji}</span> {m.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Streak cards */}
-      <div className="grid grid-cols-4 gap-2">
-        {streaks.map(({ metric, streak }) => (
-          <StreakCard key={metric} metric={metric} streak={streak} />
-        ))}
-      </div>
-
-      {/* Weekly trend chart */}
-      <div className="card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={16} className="text-primary" />
-            <h3 className="text-sm font-semibold text-text-light dark:text-text-dark">Weekly Trend</h3>
-          </div>
-          <select
-            value={selectedMetric}
-            onChange={e => setSelectedMetric(e.target.value)}
-            className="text-xs input w-auto py-1 px-2"
-          >
-            {Object.keys(METRIC_CONFIG).map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </div>
-        <MiniChart
-          data={weeklyTrend}
-          color={METRIC_CONFIG[selectedMetric]?.bg?.replace('/20', '') || 'bg-primary'}
+      {/* ── Inline log form ── */}
+      {activeMetric && (
+        <LogForm
+          metric={activeMetric}
+          initial={editingId ? logs.find(l => l.id === editingId) : null}
+          onSave={handleSave}
+          onCancel={() => { setActiveMetric(null); setEditingId(null) }}
         />
-      </div>
-
-      {/* Daily logs */}
-      {loading ? (
-        <div className="space-y-4">
-          {[1, 2].map(i => (
-            <div key={i} className="space-y-2">
-              <div className="h-5 w-32 bg-border-light dark:bg-border-dark rounded animate-pulse" />
-              <div className="h-16 bg-border-light dark:bg-border-dark rounded-xl animate-pulse" />
-            </div>
-          ))}
-        </div>
-      ) : groupedLogs.length === 0 ? (
-        <div className="text-center py-16">
-          <span className="text-5xl mb-4 block">❤️</span>
-          <p className="text-muted-light dark:text-muted-dark font-medium">No health logs yet.</p>
-          <p className="text-xs text-muted-light dark:text-muted-dark mt-1">
-            Log with <code className="text-primary">gym 45min @h</code> or tap the + button
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {groupedLogs.map(group => (
-            <div key={group.date}>
-              <h3 className="text-sm font-bold font-serif text-text-light dark:text-text-dark mb-2">
-                {formatDayHeader(group.date)}
-              </h3>
-              <div className="space-y-2">
-                {group.logs.map(log => {
-                  const config = METRIC_CONFIG[log.metric] || METRIC_CONFIG.custom
-                  const Icon = config.icon
-                  return (
-                    <div
-                      key={log.id}
-                      className="card p-3 flex items-center gap-3 group"
-                    >
-                      <div className={`w-9 h-9 rounded-xl ${config.bg} flex items-center justify-center flex-shrink-0`}>
-                        <Icon size={18} className={config.color} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-text-light dark:text-text-dark capitalize">{log.metric}</span>
-                          {log.value != null && (
-                            <span className={`text-sm font-bold ${config.color}`}>
-                              {log.value}{log.unit}
-                            </span>
-                          )}
-                        </div>
-                        {log.note && (
-                          <p className="text-xs text-muted-light dark:text-muted-dark mt-0.5 truncate">{log.note}</p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => deleteLog(log.id)}
-                        className="btn-icon opacity-0 group-hover:opacity-100 text-red-500 flex-shrink-0"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
       )}
 
-      <AddHealthSheet open={showAdd} onClose={() => setShowAdd(false)} onAdd={addLog} />
+      {/* ── Progress rings ── */}
+      <div className="hrings-grid">
+        <div className="hring-card">
+          <Ring type="steps" value={stepsVal} max={10000} size={110} stroke={11}
+            label={stepsVal.toLocaleString()} sub="Steps today" />
+        </div>
+        <div className="hring-card">
+          <Ring type="sleep" value={sleepVal} max={9} size={110} stroke={11}
+            label={`${sleepVal} hrs`} sub="Sleep last night" />
+        </div>
+        <div className="hring-card">
+          <Ring type="water" value={waterVal} max={3} size={110} stroke={11}
+            label={`${waterVal} L`} sub="Water intake" />
+        </div>
+      </div>
+
+      {/* ── Habit tracker ── */}
+      <div className="hhabit-card">
+        <div className="hhabit-card-header">
+          <p className="hhabit-heading">HABIT TRACKER · THIS WEEK</p>
+          <button className="hhabit-add-btn" onClick={() => setShowAddHabit(v => !v)} title="Add habit">
+            <Plus size={13}/>
+          </button>
+        </div>
+
+        {showAddHabit && (
+          <AddHabitForm onAdd={addHabit} onCancel={() => setShowAddHabit(false)} />
+        )}
+
+        <div className="hhabit-days-header">
+          <span className="hhabit-name-spacer" />
+          {DAYS.map((d, i) => <span key={i} className="hhabit-day-label">{d}</span>)}
+          <span className="hhabit-remove-spacer" />
+        </div>
+
+        {habits.length === 0 ? (
+          <p className="hhabit-empty">No habits yet. Tap + to add one.</p>
+        ) : (
+          habits.map(h => (
+            <HabitRow key={h.id} habit={h} onToggle={toggleCheck} onRemove={removeHabit} />
+          ))
+        )}
+      </div>
+
+      {/* ── Today's log entries (editable) ── */}
+      {todayLogs.length > 0 && (
+        <div className="hentries">
+          <p className="hentries-heading">DAILY LOGS</p>
+          {todayLogs.map(log => {
+            const m = METRICS.find(x => x.key === log.metric) || METRICS[6]
+            return (
+              <div key={log.id} className="hentry">
+                <span className="hentry-emoji">{m.emoji}</span>
+                <div className="hentry-body">
+                  <span className="hentry-metric">{log.customLabel || m.label}</span>
+                  {log.value != null && (
+                    <span className="hentry-value">{log.value} {log.unit}</span>
+                  )}
+                  {log.note && <span className="hentry-note">{log.note}</span>}
+                </div>
+                <button className="hentry-edit" onClick={() => handleEdit(log)} title="Edit">
+                  <Pencil size={13}/>
+                </button>
+                <button className="hentry-del" onClick={() => deleteLog(log.id)} title="Delete">
+                  <X size={13}/>
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
