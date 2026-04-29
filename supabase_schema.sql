@@ -1,7 +1,7 @@
 -- ─── Enable UUID extension ───────────────────────────────────────────────────
 create extension if not exists "pgcrypto";
 
--- ─── notes (one per day per user) ────────────────────────────────────────────
+-- ─── notes ───────────────────────────────────────────────────────────────────
 create table if not exists notes (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
@@ -10,9 +10,10 @@ create table if not exists notes (
   unique (user_id, note_date)
 );
 alter table notes enable row level security;
+drop policy if exists "notes: own rows" on notes;
 create policy "notes: own rows" on notes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- ─── note_entries ─────────────────────────────────────────────────────────────
+-- ─── note_entries ────────────────────────────────────────────────────────────
 create table if not exists note_entries (
   id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references auth.users(id) on delete cascade,
@@ -26,6 +27,7 @@ create table if not exists note_entries (
   created_at   timestamptz default now()
 );
 alter table note_entries enable row level security;
+drop policy if exists "note_entries: own rows" on note_entries;
 create policy "note_entries: own rows" on note_entries for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ─── goals ───────────────────────────────────────────────────────────────────
@@ -41,9 +43,10 @@ create table if not exists goals (
   created_at  timestamptz default now()
 );
 alter table goals enable row level security;
+drop policy if exists "goals: own rows" on goals;
 create policy "goals: own rows" on goals for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- ─── goal_tasks ───────────────────────────────────────────────────────────────
+-- ─── goal_tasks ──────────────────────────────────────────────────────────────
 create table if not exists goal_tasks (
   id          uuid primary key default gen_random_uuid(),
   goal_id     uuid not null references goals(id) on delete cascade,
@@ -54,6 +57,7 @@ create table if not exists goal_tasks (
   created_at  timestamptz default now()
 );
 alter table goal_tasks enable row level security;
+drop policy if exists "goal_tasks: own rows" on goal_tasks;
 create policy "goal_tasks: own rows" on goal_tasks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ─── expenses ────────────────────────────────────────────────────────────────
@@ -68,6 +72,7 @@ create table if not exists expenses (
   created_at      timestamptz default now()
 );
 alter table expenses enable row level security;
+drop policy if exists "expenses: own rows" on expenses;
 create policy "expenses: own rows" on expenses for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ─── health_logs ─────────────────────────────────────────────────────────────
@@ -84,10 +89,10 @@ create table if not exists health_logs (
   created_at      timestamptz default now()
 );
 alter table health_logs enable row level security;
+drop policy if exists "health_logs: own rows" on health_logs;
 create policy "health_logs: own rows" on health_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ─── habits ──────────────────────────────────────────────────────────────────
--- Stores user-defined habits with their scheduled days (Mon=0 … Sun=6)
 create table if not exists habits (
   id              uuid primary key default gen_random_uuid(),
   user_id         uuid not null references auth.users(id) on delete cascade,
@@ -96,71 +101,61 @@ create table if not exists habits (
   created_at      timestamptz default now()
 );
 alter table habits enable row level security;
+drop policy if exists "habits: own rows" on habits;
 create policy "habits: own rows" on habits for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ─── habit_checks ────────────────────────────────────────────────────────────
--- One row per habit per day-index per week when the user marks it done
 create table if not exists habit_checks (
   id           uuid primary key default gen_random_uuid(),
   habit_id     uuid not null references habits(id) on delete cascade,
   user_id      uuid not null references auth.users(id) on delete cascade,
-  checked_day  int  not null check (checked_day between 0 and 6), -- 0=Mon … 6=Sun
-  week_start   date not null, -- Monday of the ISO week
+  checked_day  int  not null check (checked_day between 0 and 6),
+  week_start   date not null,
   created_at   timestamptz default now(),
   unique (habit_id, week_start, checked_day)
 );
 alter table habit_checks enable row level security;
+drop policy if exists "habit_checks: own rows" on habit_checks;
 create policy "habit_checks: own rows" on habit_checks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- ─── reminders / alarms ─────────────────────────────────────────────────────
+-- ─── reminders ───────────────────────────────────────────────────────────────
 create table if not exists reminders (
   id                uuid primary key default gen_random_uuid(),
   user_id           uuid not null references auth.users(id) on delete cascade,
   note_entry_id     uuid references note_entries(id) on delete set null,
   goal_id           uuid references goals(id) on delete set null,
-
-  -- core
   title             text not null,
   description       text default '',
   remind_at         timestamptz not null,
-
-  -- alarm vs reminder
   type              text default 'reminder' check (type in ('reminder', 'alarm')),
-
-  -- recurrence
   recurrence        text default 'none' check (recurrence in ('none','daily','weekly','monthly','yearly')),
-  recurrence_days   int[] default '{}',          -- e.g. {1,3,5} for Mon/Wed/Fri
-  recurrence_end    date,                        -- stop repeating after this date
-
-  -- snooze
+  recurrence_days   int[] default '{}',
+  recurrence_end    date,
   snoozed_until     timestamptz,
   snooze_count      int default 0,
-
-  -- status
   status            text default 'pending' check (status in ('pending','dismissed','completed')),
   push_sent         boolean default false,
-
   created_at        timestamptz default now(),
   updated_at        timestamptz default now()
 );
-
 create index if not exists reminders_user_remind_at on reminders (user_id, remind_at);
 create index if not exists reminders_status on reminders (status) where status = 'pending';
-
 alter table reminders enable row level security;
+drop policy if exists "reminders: own rows" on reminders;
 create policy "reminders: own rows" on reminders for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- auto-update updated_at
+-- ─── auto-update updated_at function ─────────────────────────────────────────
 create or replace function update_updated_at()
 returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end;
 $$;
 
+drop trigger if exists reminders_updated_at on reminders;
 create trigger reminders_updated_at
   before update on reminders
   for each row execute procedure update_updated_at();
 
--- ─── monthly_budgets ────────────────────────────────────────────────────────
+-- ─── monthly_budgets ─────────────────────────────────────────────────────────
 create table if not exists monthly_budgets (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users(id) on delete cascade,
@@ -172,8 +167,10 @@ create table if not exists monthly_budgets (
   unique (user_id, year, month)
 );
 alter table monthly_budgets enable row level security;
+drop policy if exists "monthly_budgets: own rows" on monthly_budgets;
 create policy "monthly_budgets: own rows" on monthly_budgets for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop trigger if exists monthly_budgets_updated_at on monthly_budgets;
 create trigger monthly_budgets_updated_at
   before update on monthly_budgets
   for each row execute procedure update_updated_at();
@@ -191,4 +188,5 @@ create table if not exists subscriptions (
   created_at          timestamptz default now()
 );
 alter table subscriptions enable row level security;
+drop policy if exists "subscriptions: own rows" on subscriptions;
 create policy "subscriptions: own rows" on subscriptions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
